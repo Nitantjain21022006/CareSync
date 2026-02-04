@@ -260,13 +260,13 @@ const Signup = () => {
                 <div className="w-full max-w-3xl">
                     <div className="mb-12 text-center">
                         <h1 className="text-4xl md:text-5xl font-extrabold text-[#1A202C] mb-4 tracking-tight">
-                            {step === 1 ? 'Create Your Account' : 
-                             step === 2 ? 'Security & Identity' :
-                             step === 3 ? 'Professional Profile' : 'Account Ready'}
+                            {step === 1 ? 'Create Your Account' :
+                                step === 2 ? 'Security & Identity' :
+                                    step === 3 ? 'Professional Profile' : 'Account Ready'}
                         </h1>
                         <p className="text-lg text-[#64748B] font-medium">
-                            {step === 1 ? 'Select your professional role within the MediCare ecosystem.' : 
-                             `Configuring ${selectedRole?.charAt(0).toUpperCase() + selectedRole?.slice(1)} access level.`}
+                            {step === 1 ? 'Select your professional role within the MediCare ecosystem.' :
+                                `Configuring ${selectedRole?.charAt(0).toUpperCase() + selectedRole?.slice(1)} access level.`}
                         </p>
                     </div>
 

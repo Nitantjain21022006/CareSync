@@ -1,6 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const Landing = () => {
+    const [stats, setStats] = useState({ heart_rate: 112, status: 'Healthy Flow', loading: true });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    setStats({ ...data, loading: false });
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                setStats(prev => ({ ...prev, loading: false }));
+            }
+        };
+
+        fetchStats();
+        const interval = setInterval(fetchStats, 30000); // Update every 30s
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#F8FBFA] text-[#2D3748] font-sans selection:bg-[#2D7D6F]/20">
             {/* Navigation */}
@@ -21,9 +43,9 @@ const Landing = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button className="px-6 py-2.5 bg-[#2D7D6F] text-white font-bold rounded-lg shadow-lg shadow-[#2D7D6F]/20 hover:bg-[#246A5E] transition-all active:scale-95 text-sm uppercase tracking-wide">
+                    <Link to="/login" className="px-6 py-2.5 bg-[#2D7D6F] text-white font-bold rounded-lg shadow-lg shadow-[#2D7D6F]/20 hover:bg-[#246A5E] transition-all active:scale-95 text-sm uppercase tracking-wide">
                         Portal Login
-                    </button>
+                    </Link>
                 </div>
             </nav>
 
@@ -45,9 +67,9 @@ const Landing = () => {
                             MediCare brings precision to healthcare management. A unified ecosystem for hospitals, doctor suites, and patient recovery.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                            <button className="w-full sm:w-auto px-10 py-4 bg-[#2D7D6F] text-white font-black rounded-xl shadow-2xl hover:bg-[#246A5E] transition-all transform hover:-translate-y-1 active:scale-95 text-lg">
+                            <Link to="/signup" className="w-full sm:w-auto px-10 py-4 bg-[#2D7D6F] text-white font-black rounded-xl shadow-2xl hover:bg-[#246A5E] transition-all transform hover:-translate-y-1 active:scale-95 text-lg text-center">
                                 Get Started Now
-                            </button>
+                            </Link>
                             <button className="w-full sm:w-auto px-10 py-4 bg-white text-[#2D7D6F] border-2 border-[#E9F5F3] font-bold rounded-xl hover:bg-[#F4F7F6] transition-all text-lg shadow-sm">
                                 Watch Demo
                             </button>
@@ -74,9 +96,11 @@ const Landing = () => {
                             {/* Floating Stat Card 1 */}
                             <div className="absolute -top-6 -right-6 bg-white p-5 rounded-2xl shadow-xl border border-[#E2E8F0] animate-bounce w-40 md:w-48">
                                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Heart Rate</div>
-                                <div className="text-2xl font-black text-[#2D7D6F]">112 <span className="text-xs font-bold text-gray-500">bpm</span></div>
+                                <div className="text-2xl font-black text-[#2D7D6F]">
+                                    {stats.heart_rate} <span className="text-xs font-bold text-gray-500">bpm</span>
+                                </div>
                                 <div className="mt-2 h-1 bg-[#2D7D6F]/10 rounded-full overflow-hidden">
-                                    <div className="w-[70%] h-full bg-[#2D7D6F]" />
+                                    <div className="h-full bg-[#2D7D6F]" style={{ width: `${(stats.heart_rate / 200) * 100}%` }} />
                                 </div>
                             </div>
                             {/* Floating Stat Card 2 */}
@@ -85,8 +109,10 @@ const Landing = () => {
                                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Live Analytics</span>
                                 </div>
-                                <div className="text-lg font-bold mb-1 leading-none">Healthy Flow</div>
-                                <div className="text-[10px] text-white/50 italic">Updating in real-time...</div>
+                                <div className="text-lg font-bold mb-1 leading-none">{stats.status}</div>
+                                <div className="text-[10px] text-white/50 italic">
+                                    {stats.loading ? 'Fetching...' : 'Connected to Go Backend'}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -140,9 +166,9 @@ const Landing = () => {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#E9F5F3] rounded-bl-full -z-10 transition-transform group-hover:scale-150" />
                         <h3 className="text-3xl font-black text-[#1A202C] mb-4">Patient Portal</h3>
                         <p className="text-[#4A5568] mb-10 leading-relaxed">View your lab results, manage bills, and consult with doctors from your private dashboard.</p>
-                        <button className="px-8 py-3 bg-[#2D7D6F] text-white font-black rounded-xl hover:shadow-lg transition-all">
+                        <Link to="/signup" className="px-8 py-3 bg-[#2D7D6F] text-white font-black rounded-xl hover:shadow-lg transition-all text-center">
                             Access My Health
-                        </button>
+                        </Link>
                     </div>
 
                     {/* Provider Card */}
@@ -150,9 +176,9 @@ const Landing = () => {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -z-10 transition-transform group-hover:scale-150" />
                         <h3 className="text-3xl font-black text-white mb-4">Provider Suite</h3>
                         <p className="text-white/80 mb-10 leading-relaxed">Full administrative control for medical staff, nurses, and hospital administrators.</p>
-                        <button className="px-8 py-3 bg-white text-[#2D7D6F] font-black rounded-xl hover:shadow-xl transition-all">
+                        <Link to="/login" className="px-8 py-3 bg-white text-[#2D7D6F] font-black rounded-xl hover:shadow-xl transition-all text-center">
                             Launch Provider Suite
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </section>

@@ -18,9 +18,41 @@ const roles = [
 const Signup = () => {
     const [step, setStep] = useState(1);
     const [selectedRole, setSelectedRole] = useState(null);
-    const [formData, setFormData] = useState({});
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+        fullName: '',
+        phone: '',
+        license: '',
+        specialty: '',
+        workspace: '',
+        dob: '',
+        gender: '', // New
+        bloodGroup: '',
+        address: '',
+        emergencyContact: '', // New
+        experience: '', // New
+        hospitalType: '', // New
+        capacity: '', // New
+        subRole: '' // New
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleRoleSelect = (roleId) => {
+        if (selectedRole !== roleId) {
+            // If changing role, reset role-specific fields but keep core identity
+            setFormData(prev => ({
+                ...prev,
+                license: '',
+                specialty: '',
+                workspace: '',
+                experience: '',
+                hospitalType: '',
+                capacity: '',
+                subRole: ''
+            }));
+        }
         setSelectedRole(roleId);
         setStep(2);
     };
@@ -28,155 +60,338 @@ const Signup = () => {
     const nextStep = () => setStep(step + 1);
     const prevStep = () => setStep(step - 1);
 
-    const handleSubmit = (e) => {
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setStep(4); // Success step
+        setLoading(true);
+        setError(null);
+
+        const { email, password, ...metadata } = formData;
+        metadata.role = selectedRole;
+
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    metadata
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Signup failed');
+            }
+
+            setStep(4); // Success step
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderStepContent = () => {
         switch (step) {
             case 1:
                 return (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="grid grid-cols-2 gap-3"
-                    >
+                    <div className="grid grid-cols-2 gap-4">
                         {roles.map((role) => (
                             <button
                                 key={role.id}
                                 onClick={() => handleRoleSelect(role.id)}
-                                className="group relative p-5 bg-white border border-gray-100 hover:border-teal-500 rounded-2xl transition-all text-left hover:shadow-lg"
+                                className="group relative p-6 bg-white border-2 border-slate-50 hover:border-teal-500 rounded-2xl transition-all text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)] flex flex-col items-start gap-3"
                             >
-                                <div className={`w-10 h-10 ${role.color} text-white rounded-xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                                    <role.icon className="w-5 h-5" />
+                                <div className={`w-12 h-12 ${role.color} text-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-black/5`}>
+                                    <role.icon size={24} />
                                 </div>
-                                <h3 className="text-sm font-bold text-gray-800 mb-1">{role.name}</h3>
-                                <p className="text-[10px] text-gray-400 font-medium leading-tight">{role.description}</p>
+                                <div className="space-y-0.5">
+                                    <h3 className="text-lg font-black text-slate-800 tracking-tight">{role.name}</h3>
+                                    <p className="text-[10px] text-slate-400 font-bold leading-relaxed">{role.description}</p>
+                                </div>
+                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="w-7 h-7 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                                        <ArrowRight size={14} />
+                                    </div>
+                                </div>
                             </button>
                         ))}
-                    </motion.div>
+                    </div>
                 );
             case 2:
+                const isStep2Valid = formData.fullName && formData.email && formData.phone && formData.password;
                 return (
-                    <motion.div
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="space-y-4"
-                    >
-                        <div className="flex items-center gap-3 mb-2">
-                            <button onClick={prevStep} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                    <div className="space-y-3.5">
+                        <div className="flex items-center gap-3">
+                            <button onClick={prevStep} className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
+                                <ArrowLeft className="w-3.5 h-3.5 text-gray-600" />
                             </button>
-                            <h3 className="text-md font-bold text-gray-800">Identity Details</h3>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-800 tracking-tight leading-none mb-0.5">
+                                    {selectedRole === 'patient' ? 'Patient Identity' :
+                                        selectedRole === 'doctor' ? 'Practitioner Details' :
+                                            selectedRole === 'hospital' ? 'Institutional Registry' : 'Staff Profile'}
+                                </h3>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Identity Verification</p>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">
-                                    {selectedRole === 'hospital' ? 'Hospital Name' : 'Full Name'}
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                                    {selectedRole === 'hospital' ? 'Hospital Legal Name' :
+                                        selectedRole === 'doctor' ? 'Practitioner Name' :
+                                            selectedRole === 'staff' ? 'Staff Member Name' : 'Patient Full Name'}
                                 </label>
-                                <input type="text" placeholder={selectedRole === 'hospital' ? "City General" : "John Doe"} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm font-medium h-11" />
+                                <input
+                                    name="fullName"
+                                    type="text"
+                                    required
+                                    placeholder={
+                                        selectedRole === 'hospital' ? "City General Hospital" :
+                                            selectedRole === 'doctor' ? "Dr. Shashwat Gohel" :
+                                                selectedRole === 'staff' ? "Emily Roberts" : "Shashwat Gohel"
+                                    }
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    onChange={handleChange}
+                                    value={formData.fullName}
+                                />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Phone</label>
-                                <input type="tel" placeholder="+1 (555) 000-0000" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm font-medium h-11" />
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Primary Phone</label>
+                                <input
+                                    name="phone"
+                                    type="tel"
+                                    required
+                                    placeholder="+91 XXXXX XXXXX"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    onChange={handleChange}
+                                    value={formData.phone}
+                                />
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Email Address</label>
-                            <input type="email" placeholder="email@domain.com" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm font-medium h-11" />
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                                {selectedRole === 'hospital' ? 'Official Institutional Email' :
+                                    selectedRole === 'doctor' ? 'Professional Medical Email' :
+                                        selectedRole === 'staff' ? 'Work Access Email' : 'Personal Email Address'}
+                            </label>
+                            <input
+                                name="email"
+                                type="email"
+                                required
+                                placeholder={
+                                    selectedRole === 'hospital' ? "admin@hospital.org" :
+                                        selectedRole === 'doctor' ? "dr.name@medicare.system" :
+                                            selectedRole === 'staff' ? "staff.id@medicare.system" : "name@email.com"
+                                }
+                                className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                onChange={handleChange}
+                                value={formData.email}
+                            />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Password</label>
-                                <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm font-medium h-11" />
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Secure Password</label>
+                                <input
+                                    name="password"
+                                    type="password"
+                                    required
+                                    placeholder="••••••••"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    onChange={handleChange}
+                                    value={formData.password}
+                                />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Confirm</label>
-                                <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm font-medium h-11" />
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Verify Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    placeholder="••••••••"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                />
                             </div>
                         </div>
                         <button
                             onClick={nextStep}
-                            className="w-full py-3 bg-[#2D7D6F] text-white font-bold rounded-xl shadow-lg hover:bg-teal-800 transition-all flex items-center justify-center gap-2 mt-4 text-sm h-11"
+                            disabled={!isStep2Valid}
+                            className="w-full py-3.5 bg-teal-600 text-white font-black rounded-lg shadow-lg shadow-teal-500/10 hover:bg-teal-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-1 text-[10px] uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0"
                         >
-                            Continue
-                            <ArrowRight className="w-4 h-4" />
+                            Continue Registration
+                            <ArrowRight size={14} />
                         </button>
-                    </motion.div>
+                    </div>
                 );
             case 3:
                 return (
-                    <motion.div
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="space-y-4"
-                    >
-                        <div className="flex items-center gap-3 mb-2">
-                            <button onClick={prevStep} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                            <button onClick={prevStep} className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
+                                <ArrowLeft className="w-3.5 h-3.5 text-gray-600" />
                             </button>
-                            <h3 className="text-md font-bold text-gray-800">Verification</h3>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-800 tracking-tight leading-none mb-0.5">
+                                    {selectedRole === 'patient' ? 'Health Analytics' :
+                                        selectedRole === 'doctor' ? 'Clinical Credentials' :
+                                            selectedRole === 'hospital' ? 'Institutional Registry' : 'Operational Workspace'}
+                                </h3>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Mandatory Verification</p>
+                            </div>
                         </div>
 
-                        {selectedRole === 'patient' ? (
-                            <div className="grid grid-cols-2 gap-3">
+                        {selectedRole === 'patient' && (
+                            <div className="grid grid-cols-2 gap-2.5">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">D.O.B</label>
-                                    <input type="date" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm h-11" />
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Date of Birth</label>
+                                    <input name="dob" type="date" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.dob} />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Blood Group</label>
-                                    <input type="text" placeholder="e.g. O+" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm h-11" />
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Biological Gender</label>
+                                    <select name="gender" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.gender}>
+                                        <option value="">Select</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Blood Group</label>
+                                    <select name="bloodGroup" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.bloodGroup}>
+                                        <option value="">Select Group</option>
+                                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Emergency Contact</label>
+                                    <input name="emergencyContact" required placeholder="+91 XXXXX XXXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.emergencyContact} />
                                 </div>
                                 <div className="space-y-1 col-span-2">
-                                    <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Address</label>
-                                    <input placeholder="Residential address" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm h-11" />
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">License/ID</label>
-                                    <input type="text" placeholder="MD-XXXX-XXXX" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm h-11" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Specialty</label>
-                                    <input type="text" placeholder="e.g. Cardiology" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm h-11" />
-                                </div>
-                                <div className="space-y-1 col-span-2">
-                                    <label className="text-[10px] font-bold text-teal-700 uppercase tracking-wider ml-1">Workspace</label>
-                                    <input placeholder="Hosp/Clinic Name" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-teal-500 text-sm h-11" />
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Permanent Address</label>
+                                    <input name="address" required placeholder="123 Health St, Medical District" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.address} />
                                 </div>
                             </div>
                         )}
 
+                        {selectedRole === 'doctor' && (
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">License ID</label>
+                                    <input name="license" required placeholder="MD-2024-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Primary Specialty</label>
+                                    <input name="specialty" required placeholder="e.g. Cardiology" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Exp. (Years)</label>
+                                    <input name="experience" type="number" required placeholder="e.g 10" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.experience} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Affiliation</label>
+                                    <input name="workspace" required placeholder="Institution Name" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.workspace} />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedRole === 'hospital' && (
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Reg. No.</label>
+                                    <input name="license" required placeholder="HOSP-REG-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Type</label>
+                                    <select name="hospitalType" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.hospitalType}>
+                                        <option value="">Select Type</option>
+                                        <option value="General">Multi-Specialty</option>
+                                        <option value="Clinic">Specialized Clinic</option>
+                                        <option value="Govt">Government Institution</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Bed Capacity</label>
+                                    <input name="capacity" type="number" required placeholder="e.g. 500" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.capacity} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Accreditation</label>
+                                    <select name="specialty" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty}>
+                                        <option value="">Select Level</option>
+                                        <option value="NABH">NABH Accredited</option>
+                                        <option value="JCI">JCI Accredited</option>
+                                        <option value="ISO">ISO Certified</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1 col-span-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">HQ Address</label>
+                                    <input name="address" required placeholder="City, Country" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.address} />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedRole === 'staff' && (
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Access ID</label>
+                                    <input name="license" required placeholder="STF-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Sub-Role</label>
+                                    <select name="subRole" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.subRole}>
+                                        <option value="">Select</option>
+                                        <option value="Admin">Administration</option>
+                                        <option value="Nurse">Nursing Support</option>
+                                        <option value="Tech">Laboratory Tech</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Department</label>
+                                    <input name="specialty" required placeholder="e.g. Radiology" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Assigned At</label>
+                                    <input name="workspace" required placeholder="Hospital Name" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.workspace} />
+                                </div>
+                            </div>
+                        )}
+
+                        {error && <p className="text-red-500 text-[9px] font-bold text-center bg-red-50 py-1.5 rounded-lg border border-red-100">{error}</p>}
+
                         <button
                             onClick={handleSubmit}
-                            className="w-full py-3 bg-[#2D7D6F] text-white font-bold rounded-xl shadow-lg hover:bg-teal-800 transition-all flex items-center justify-center gap-2 mt-4 text-sm h-11"
+                            disabled={loading}
+                            className="w-full py-3.5 bg-slate-900 text-white font-black rounded-lg shadow-lg shadow-slate-900/10 hover:bg-black hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-1 text-[10px] uppercase tracking-widest disabled:opacity-50"
                         >
-                            Finalize Account
-                            <CheckCircle2 className="w-4 h-4" />
+                            {loading ? 'Initializing Vault...' : 'Authorize Secure Account'}
+                            <ShieldCheck size={14} />
                         </button>
-                    </motion.div>
+                    </div>
                 );
             case 4:
                 return (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="text-center py-6"
                     >
-                        <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-teal-100">
-                            <CheckCircle2 className="w-8 h-8" />
+                        <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-teal-100 shadow-xl shadow-teal-500/10 rotate-3">
+                            <CheckCircle2 size={40} />
                         </div>
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">Registration Complete</h2>
-                        <p className="text-sm text-gray-500 mb-8 max-w-xs mx-auto">
-                            Welcome to MediCare. Your professional portal is now ready.
+                        <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">System Ready</h2>
+                        <p className="text-slate-500 text-xs font-medium mb-6 max-w-sm mx-auto leading-relaxed">
+                            Your credentials have been verified. Your secure portal environment is now active and ready for operation.
                         </p>
-                        <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3 bg-[#2D7D6F] text-white font-bold rounded-xl hover:bg-teal-800 transition-all shadow-md text-sm">
-                            Go to Login <ArrowRight className="w-4 h-4" />
+                        <Link
+                            to="/login"
+                            className="inline-flex items-center gap-3 px-8 py-4 bg-teal-600 text-white font-black rounded-xl hover:bg-teal-700 transition-all shadow-xl shadow-teal-500/10 uppercase tracking-widest text-xs"
+                        >
+                            Access Workspace <ArrowRight size={16} />
                         </Link>
                     </motion.div>
                 );
@@ -185,43 +400,124 @@ const Signup = () => {
     };
 
     return (
-        <div className="h-screen bg-[#F8FBFA] flex flex-col font-sans overflow-hidden">
-            {/* Minimal Header */}
-            <header className="p-6 md:px-12 flex items-center justify-between shrink-0">
-                <Link to="/" className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#2D7D6F] rounded-lg flex items-center justify-center text-white shadow-md text-sm font-bold">M</div>
-                    <span className="text-xl font-bold text-[#2D7D6F]">MediCare</span>
-                </Link>
-                <Link to="/login" className="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-teal-600">Login Instead</Link>
-            </header>
+        <div className="h-screen bg-[#F0F7F6] flex items-center justify-center p-4 font-sans overflow-hidden">
+            {/* Ambient Background Elements */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
 
-            <main className="flex-1 flex items-center justify-center p-4">
-                <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-gray-100 p-8 md:p-10">
-                    <div className="mb-6">
-                        <div className="flex items-center gap-1.5 mb-3">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className={`h-1 rounded-full transition-all duration-300 ${step >= i ? 'w-6 bg-teal-600' : 'w-2 bg-gray-100'}`} />
-                            ))}
+            <main className="w-full max-w-6xl flex bg-white rounded-[40px] shadow-[0_32px_80px_rgba(0,0,0,0.08)] border border-white/20 overflow-hidden h-[90vh] max-h-[850px] relative z-10 backdrop-blur-sm">
+
+                {/* Left Side: Progress & Context Sidebar */}
+                <div className="hidden lg:flex w-[35%] flex-col justify-between p-12 bg-gradient-to-br from-[#164E44] via-[#2D7D6F] to-[#164E44] text-white relative overflow-hidden">
+                    {/* Abstract Decorative SVG Pattern */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none">
+                        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <defs>
+                                <pattern id="signup-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                    <circle cx="1" cy="1" r="0.5" fill="white" />
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#signup-grid)" />
+                        </svg>
+                    </div>
+
+                    <div className="relative z-10">
+                        <Link to="/" className="flex items-center gap-3 mb-10 group">
+                            <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-[#2D7D6F] font-black text-lg shadow-xl transform group-hover:rotate-12 transition-transform duration-500">M</div>
+                            <span className="text-xl font-black tracking-tight">MediCare</span>
+                        </Link>
+
+                        <div className="space-y-8">
+                            <div>
+                                <h1 className="text-3xl font-black leading-[1.1] tracking-tight mb-3">
+                                    Join the <br />
+                                    <span className="text-teal-300">Global Network</span>
+                                </h1>
+                                <p className="text-teal-50/70 text-xs leading-relaxed max-w-xs font-medium">
+                                    Secure your professional identity and connect with the world's leading medical ecosystem.
+                                </p>
+                            </div>
+
+                            <div className="space-y-6 pt-2">
+                                {[
+                                    { s: 1, t: 'Professional Role', d: 'Account authority type' },
+                                    { s: 2, t: 'Personal Identity', d: 'Legal credentials & info' },
+                                    { s: 3, t: 'Verification', d: 'Credential validation' }
+                                ].map((item) => (
+                                    <div key={item.s} className={`flex items-start gap-4 transition-all duration-700 ${step >= item.s ? 'opacity-100' : 'opacity-20'}`}>
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black border-2 transition-all duration-500 scale-90 ${step >= item.s ? 'bg-white border-white text-[#2D7D6F] shadow-xl rotate-3 scale-110' : 'border-white/20 text-white'}`}>
+                                            {step > item.s ? <CheckCircle2 size={16} strokeWidth={3} /> : item.s}
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">{item.t}</h4>
+                                            <p className="text-[9px] text-teal-300/60 font-bold">{item.d}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            {step === 4 ? 'Success' : 'Create Account'}
-                        </h1>
-                        <p className="text-sm text-gray-500">
-                            {step === 1 ? 'Select your professional role' :
-                                step === 2 ? 'Provide your credentials' :
-                                    step === 3 ? 'Professional verification' : 'Welcome aboard'}
+                    </div>
+
+                    <div className="relative z-10">
+                        <p className="text-[9px] font-black text-teal-500/50 uppercase tracking-[0.4em]">
+                            Secure Enterprise Architecture // v4.2
                         </p>
                     </div>
+                </div>
 
-                    <div className="relative">
-                        {renderStepContent()}
-                    </div>
+                {/* Right Side: Form Content */}
+                <div className="flex-1 flex flex-col bg-white overflow-hidden">
+                    <header className="p-6 lg:px-12 flex items-center justify-between shrink-0">
+                        <div className="lg:hidden flex items-center gap-2">
+                            <div className="w-10 h-10 bg-[#2D7D6F] rounded-xl flex items-center justify-center text-white shadow-xl text-lg font-black">M</div>
+                            <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">MediCare</span>
+                        </div>
+                        <div className="hidden lg:block h-1 w-24 bg-slate-50 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: "33%" }}
+                                animate={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }}
+                                className="h-full bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)] transition-all duration-700"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:inline">Have account?</span>
+                            <Link to="/login" className="px-5 py-2 bg-slate-900 hover:bg-black text-white text-[9px] font-black rounded-full transition-all shadow-lg shadow-black/10 uppercase tracking-widest">
+                                Sign In
+                            </Link>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 px-10 lg:px-24 py-4 max-w-4xl mx-auto w-full">
+                        <motion.div
+                            key={step}
+                            initial={{ opacity: 0, scale: 0.98, x: 20 }}
+                            animate={{ opacity: 1, scale: 1, x: 0 }}
+                            className="h-full flex flex-col justify-center"
+                        >
+                            <div className="mb-4">
+                                <h2 className="text-2xl font-black text-slate-900 mb-0.5 tracking-tighter">
+                                    {step === 4 ? 'Infrastructure Ready' : 'Secure Registration'}
+                                </h2>
+                                <p className="text-slate-400 text-[11px] font-bold">
+                                    {step === 1 ? 'Select your authority role to begin.' :
+                                        step === 2 ? 'Establish your core identity in the network.' :
+                                            step === 3 ? 'Final validation of your professional credentials.' : 'Your secure environment is active.'}
+                                </p>
+                            </div>
+
+                            <div className="relative">
+                                {renderStepContent()}
+                            </div>
+                        </motion.div>
+                    </main>
+
+                    <footer className="p-6 text-center shrink-0">
+                        <p className="text-[9px] text-slate-300 font-black uppercase tracking-[0.4em]">
+                            Global Healthcare Protocol // Verification Layer
+                        </p>
+                    </footer>
                 </div>
             </main>
-
-            <footer className="p-6 text-center text-[9px] font-bold text-gray-300 uppercase tracking-[0.2em] shrink-0">
-                Secure Enterprise Infrastructure // v4.2
-            </footer>
         </div>
     );
 };

@@ -1,0 +1,25 @@
+import express from 'express';
+import {
+    getPatientUpcomingAppointments,
+    bookAppointment,
+    getDoctorAppointments,
+    getDoctorTodayAppointments,
+    getDoctorStats,
+    getStaffStats,
+    getPendingAppointments,
+    updateAppointmentStatus
+} from '../controllers/appointmentController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+router.post('/book', protect, authorize('patient'), bookAppointment);
+router.get('/patient/upcoming', protect, authorize('patient'), getPatientUpcomingAppointments);
+router.get('/doctor', protect, authorize('doctor'), getDoctorAppointments);
+router.get('/doctor/today', protect, authorize('doctor'), getDoctorTodayAppointments);
+router.get('/doctor/stats', protect, authorize('doctor'), getDoctorStats);
+router.get('/staff/stats', protect, authorize('hospital_staff'), getStaffStats);
+router.get('/staff/pending', protect, authorize('hospital_staff'), getPendingAppointments);
+router.put('/update-status/:id', protect, authorize('hospital_staff', 'admin'), updateAppointmentStatus);
+
+export default router;

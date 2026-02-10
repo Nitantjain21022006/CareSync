@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file: ./backend/.env
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - caresync-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - caresync-network
+
+  ml-service:
+    build: ./ml-service
+    ports:
+      - "5001:5001"
+    networks:
+      - caresync-network
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - caresync-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - caresync-network
+
+networks:
+  caresync-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

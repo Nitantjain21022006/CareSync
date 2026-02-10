@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../config/api';
 
 const Landing = () => {
     const [stats, setStats] = useState({ heart_rate: 112, status: 'Healthy Flow', loading: true });
@@ -7,11 +8,8 @@ const Landing = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/stats');
-                if (response.ok) {
-                    const data = await response.json();
-                    setStats({ ...data, loading: false });
-                }
+                const response = await api.get('/stats');
+                setStats({ ...response.data, loading: false });
             } catch (error) {
                 console.error('Error fetching stats:', error);
                 setStats(prev => ({ ...prev, loading: false }));
@@ -33,7 +31,7 @@ const Landing = () => {
                             <path d="M10 2a1 1 0 011 1v2a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-2a1 1 0 100 2h2zm-7 4a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H2a1 1 0 100 2h2z" />
                         </svg>
                     </div>
-                    <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">MediCare</span>
+                    <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">CareSync</span>
                 </div>
 
                 <div className="hidden md:flex items-center gap-10 text-sm font-bold text-[#4A5568] uppercase tracking-wider">
@@ -64,7 +62,7 @@ const Landing = () => {
                             <span className="text-[#2D7D6F]">Simplified.</span>
                         </h1>
                         <p className="text-xl text-[#4A5568] max-w-xl mb-12 leading-relaxed mx-auto lg:mx-0">
-                            MediCare brings precision to healthcare management. A unified ecosystem for hospitals, doctor suites, and patient recovery.
+                            CareSync brings precision to healthcare management. A unified ecosystem for hospitals, doctor suites, and patient recovery.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                             <Link to="/signup" className="w-full sm:w-auto px-10 py-4 bg-[#2D7D6F] text-white font-black rounded-xl shadow-2xl hover:bg-[#246A5E] transition-all transform hover:-translate-y-1 active:scale-95 text-lg text-center">
@@ -89,7 +87,7 @@ const Landing = () => {
                             <div className="rounded-[2rem] overflow-hidden aspect-video border border-[#E2E8F0]">
                                 <img
                                     src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1200"
-                                    alt="MediCare Dashboard UI"
+                                    alt="CareSync Dashboard UI"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -189,7 +187,7 @@ const Landing = () => {
                     <div className="max-w-sm">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-8 h-8 bg-[#2D7D6F] rounded flex items-center justify-center font-bold">M</div>
-                            <span className="text-xl font-black tracking-tight">MediCare</span>
+                            <span className="text-xl font-black tracking-tight">CareSync</span>
                         </div>
                         <p className="text-gray-400 text-sm leading-relaxed mb-8">
                             Empowering healthcare institutions with professional-grade digital infrastructure. Trusted by leading clinical groups worldwide.
@@ -221,7 +219,7 @@ const Landing = () => {
                     </div>
                 </div>
                 <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 text-gray-600 text-[10px] font-black uppercase tracking-[0.3em] text-center">
-                    © 2026 MediCare Software Engineering Group. All Rights Reserved.
+                    © 2026 CareSync Software Engineering Group. All Rights Reserved.
                 </div>
             </footer>
         </div>

@@ -1,41 +1,131 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+// import xss from 'xss-clean'; // Removed: Incompatible with Express 5 getters
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 import 'dotenv/config';
 
-import authRoutes from './routes/authRoutes.js';
 import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import appointmentRoutes from './routes/appointmentRoutes.js';
+import recordRoutes from './routes/recordRoutes.js';
+import billingRoutes from './routes/billingRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import mlRoutes from './routes/mlRoutes.js';
+import redis from './config/redis.js';
 
-// Connect to MongoDB
+// Connect DBs
 connectDB();
 
 const app = express();
-const PORT = 5000;
 
-app.use(cors());
+/* =========================
+   GLOBAL MIDDLEWARES
+========================= */
+
+// CORS (FIRST)
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
+
+// Logging
+app.use(morgan('dev'));
+
+// Stripe webhook (raw body only for this route)
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+
+// Body parsers
 app.use(express.json());
+app.use(cookieParser());
 
-// Request logging middleware
+// Mongo sanitize REMOVED to fix getter property crash
+// app.use(
+//   mongoSanitize({
+//     replaceWith: '_',
+//     sanitizeQuery: false, // 🔑 prevents req.query crash
+//   })
+// );
+
+// Security headers (Helmet sets various HTTP headers to protect against common attacks)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// XSS protection (REMOVED: xss-clean is incompatible with Express 5 req.query)
+// app.use(xss());
+
+// Rate limiting
+app.use(
+  rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+
+// Optional request logger (keep or remove)
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    next();
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+/* =========================
+   ROUTES
+========================= */
+
+app.get('/api/stats', (req, res) => {
+  res.json({
+    heart_rate: 72 + Math.floor(Math.random() * 10),
+    status: 'Healthy Flow',
+    active_doctors: 12,
+    total_patients: 1540
+  });
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/records', recordRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/ml', mlRoutes);
 
+// Health check
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'MediCare Backend is running' });
+  res.json({ status: 'ok', message: 'CareSync Backend is running' });
 });
 
-process.on('uncaughtException', (err) => {
-    console.error('UNCAUGHT EXCEPTION:', err);
+// ML health check
+app.get('/api/ml-health', (req, res) => {
+  res.json({ status: 'ok', service: 'ML Service not implemented yet' });
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('UNHANDLED REJECTION:', reason);
+/* =========================
+   ERROR HANDLER
+========================= */
+
+app.use((err, req, res, next) => {
+  console.error('SERVER ERROR:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal Server Error',
+  });
 });
 
-const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-}).on('error', (err) => {
-    console.error('SERVER ERROR:', err);
+/* =========================
+   SERVER
+========================= */
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+
+// Unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err.message);
 });

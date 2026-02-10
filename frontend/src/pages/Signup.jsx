@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Building2, Stethoscope, ShieldCheck,
@@ -7,15 +8,17 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../config/api';
 
 const roles = [
     { id: 'patient', name: 'Patient', icon: User, color: 'bg-slate-700', description: 'Personal health management.' },
     { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-teal-600', description: 'Clinical practice portal.' },
-    { id: 'hospital', name: 'Hospital', icon: Building2, color: 'bg-indigo-700', description: 'Institution infrastructure.' },
-    { id: 'staff', name: 'Staff', icon: ShieldCheck, color: 'bg-slate-600', description: 'Operations support.' },
+    { id: 'admin', name: 'Hospital', icon: Building2, color: 'bg-indigo-700', description: 'Institution infrastructure.' },
+    { id: 'hospital_staff', name: 'Staff', icon: ShieldCheck, color: 'bg-slate-600', description: 'Operations support.' },
 ];
 
 const Signup = () => {
+    const { register } = useAuth();
     const [step, setStep] = useState(1);
     const [selectedRole, setSelectedRole] = useState(null);
     const [formData, setFormData] = useState({
@@ -73,21 +76,14 @@ const Signup = () => {
         metadata.role = selectedRole;
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    metadata
-                })
+            await register({
+                email,
+                password,
+                fullName: formData.fullName,
+                phone: formData.phone,
+                role: selectedRole,
+                metadata: { ...metadata }
             });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Signup failed');
-            }
 
             setStep(4); // Success step
         } catch (err) {
@@ -188,8 +184,8 @@ const Signup = () => {
                                 required
                                 placeholder={
                                     selectedRole === 'hospital' ? "admin@hospital.org" :
-                                        selectedRole === 'doctor' ? "dr.name@medicare.system" :
-                                            selectedRole === 'staff' ? "staff.id@medicare.system" : "name@email.com"
+                                        selectedRole === 'doctor' ? "dr.name@caresync.system" :
+                                            selectedRole === 'staff' ? "staff.id@caresync.system" : "name@email.com"
                                 }
                                 className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
                                 onChange={handleChange}
@@ -424,7 +420,7 @@ const Signup = () => {
                     <div className="relative z-10">
                         <Link to="/" className="flex items-center gap-3 mb-10 group">
                             <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-[#2D7D6F] font-black text-lg shadow-xl transform group-hover:rotate-12 transition-transform duration-500">M</div>
-                            <span className="text-xl font-black tracking-tight">MediCare</span>
+                            <span className="text-xl font-black tracking-tight">CareSync</span>
                         </Link>
 
                         <div className="space-y-8">
@@ -470,7 +466,7 @@ const Signup = () => {
                     <header className="p-6 lg:px-12 flex items-center justify-between shrink-0">
                         <div className="lg:hidden flex items-center gap-2">
                             <div className="w-10 h-10 bg-[#2D7D6F] rounded-xl flex items-center justify-center text-white shadow-xl text-lg font-black">M</div>
-                            <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">MediCare</span>
+                            <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">CareSync</span>
                         </div>
                         <div className="hidden lg:block h-1 w-24 bg-slate-50 rounded-full overflow-hidden">
                             <motion.div

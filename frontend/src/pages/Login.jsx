@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Building2, Stethoscope, ShieldCheck, ArrowRight, Lock, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../config/api';
 
 const roles = [
     { id: 'patient', name: 'Patient', icon: User, color: 'bg-slate-700', description: 'Access medical history.' },
     { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-teal-600', description: 'Manage appointments.' },
-    { id: 'hospital', name: 'Hospital', icon: Building2, color: 'bg-indigo-700', description: 'Manage operations.' },
-    { id: 'staff', name: 'Staff', icon: ShieldCheck, color: 'bg-slate-600', description: 'Support roles.' },
+    { id: 'admin', name: 'Hospital', icon: Building2, color: 'bg-indigo-700', description: 'Manage operations.' },
+    { id: 'hospital_staff', name: 'Staff', icon: ShieldCheck, color: 'bg-slate-600', description: 'Support roles.' },
 ];
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { login } = useAuth();
     const [selectedRole, setSelectedRole] = useState(null);
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
@@ -22,29 +26,11 @@ const Login = () => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: formData.email,
-                    password: formData.password,
-                    role: selectedRole
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Login failed');
-            }
+            const result = await login(formData.email, formData.password, selectedRole);
 
             console.log('Login successful:', result);
-            // Store JWT token
-            localStorage.setItem('medicare_token', result.token);
-            localStorage.setItem('user_data', JSON.stringify(result.user));
-
-            // Redirect or update UI state
-            alert('Login successful!');
+            // Redirection handled by App.jsx Route path="/dashboard" or logic here
+            navigate('/dashboard');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -75,7 +61,7 @@ const Login = () => {
                     <div className="relative z-10">
                         <Link to="/" className="flex items-center gap-3 mb-10 group">
                             <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-[#2D7D6F] font-black text-lg shadow-xl transform group-hover:rotate-12 transition-transform duration-500">M</div>
-                            <span className="text-xl font-black tracking-tight">MediCare</span>
+                            <span className="text-xl font-black tracking-tight">CareSync</span>
                         </Link>
 
                         <div className="space-y-6">
@@ -115,7 +101,7 @@ const Login = () => {
                     <header className="p-6 lg:px-12 flex items-center justify-between shrink-0">
                         <div className="lg:hidden flex items-center gap-2">
                             <div className="w-10 h-10 bg-[#2D7D6F] rounded-xl flex items-center justify-center text-white shadow-xl text-lg font-black">M</div>
-                            <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">MediCare</span>
+                            <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">CareSync</span>
                         </div>
                         <div className="hidden lg:block h-1 w-24 bg-slate-50 rounded-full overflow-hidden">
                             <motion.div
@@ -190,7 +176,7 @@ const Login = () => {
                                                     placeholder={
                                                         selectedRole === 'patient' ? 'e.g. name@email.com' :
                                                             selectedRole === 'doctor' ? 'e.g. dr.name@medicare.system' :
-                                                                selectedRole === 'hospital' ? 'e.g. admin@hospital.org' : 'e.g. staff.id@medicare.system'
+                                                                selectedRole === 'hospital' ? 'e.g. admin@hospital.org' : 'e.g. staff.id@caresync.system'
                                                     }
                                                     required
                                                     className="w-full pl-14 pr-5 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:border-teal-500/30 focus:bg-white outline-none transition-all text-sm font-black h-12 placeholder:text-slate-300 shadow-sm"

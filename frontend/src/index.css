@@ -5,6 +5,11 @@
 @tailwind utilities;
 
 :root {
+  --medicare-primary: #2D7D6F;
+  --medicare-primary-dark: #164E44;
+  --medicare-primary-light: #E9F5F3;
+  --medicare-bg: #F8FBFA;
+  --medicare-slate: #2D3748;
   font-family: "Plus Jakarta Sans", sans-serif;
 }
 
@@ -12,7 +17,8 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F8FBFA;
+  background-color: var(--medicare-bg);
+  color: var(--medicare-slate);
 }
 
 @layer utilities {
@@ -22,5 +28,13 @@ body {
   .bg-grid-pattern {
     background-image: radial-gradient(#2D7D6F 0.5px, transparent 0.5px);
     background-size: 24px 24px;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .teal-gradient {
+    background: linear-gradient(135deg, #2D7D6F 0%, #164E44 100%);
   }
 }

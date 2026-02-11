@@ -77,27 +77,27 @@ const AccessRequests = () => {
     };
 
     return (
-        <div className="space-y-8 pb-12">
+        <div className="space-y-8 pb-10 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-[#1A202C] tracking-tighter">Access Authorization</h1>
-                    <p className="text-[#a0aec0] font-bold text-sm tracking-tight mt-1">Acquire clinical permissions for historical medical data.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Access Control Center</h1>
+                    <p className="text-slate-500 font-medium text-sm mt-1">Acquire clinical permissions for historical medical evaluations.</p>
                 </div>
             </div>
 
             <AnimatePresence>
                 {message.text && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className={`p-6 rounded-[1.5rem] flex items-center justify-between shadow-2xl ${message.type === 'success' ? 'bg-[#2D7D6F] text-white shadow-[#2D7D6F]/20' : 'bg-red-500 text-white shadow-red-500/20'
+                        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                        className={`p-5 rounded-2xl flex items-center justify-between shadow-lg ${message.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
                             }`}>
-                        <div className="flex items-center gap-4">
-                            {message.type === 'success' ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-                            <span className="text-xs font-black uppercase tracking-[0.1em]">{message.text}</span>
+                        <div className="flex items-center gap-4 px-2">
+                            {message.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                            <span className="text-xs font-bold uppercase tracking-widest">{message.text}</span>
                         </div>
-                        <button onClick={() => setMessage({ type: '', text: '' })}><X size={18} /></button>
+                        <button onClick={() => setMessage({ type: '', text: '' })} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><X size={16} /></button>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -105,39 +105,40 @@ const AccessRequests = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Search & Request Form */}
                 <div className="space-y-6">
-                    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] p-8 space-y-8 shadow-sm">
-                        <h3 className="text-lg font-black text-[#1A202C] tracking-tight">Identity Discovery</h3>
-                        <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A0AEC0]" />
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight px-2">Entity Discovery</h3>
+                        <div className="relative group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Locate entity by name or digital ID..."
-                                className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 pl-12 pr-6 text-xs font-black text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all"
+                                placeholder="Search repository by identifier..."
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-6 text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-500 transition-all shadow-inner"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
 
-                        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-3 custom-scrollbar">
+                        <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                             {filteredPatients.map(patient => (
                                 <button
                                     key={patient._id}
                                     onClick={() => setSelectedPatient(patient)}
-                                    className={`w-full p-6 rounded-2xl flex items-center justify-between border transition-all ${selectedPatient?._id === patient._id
-                                        ? 'bg-[#1A202C] border-[#1A202C] text-white shadow-xl'
-                                        : 'bg-white border-[#E2E8F0] text-[#A0AEC0] hover:border-[#2D7D6F]'
+                                    className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all ${selectedPatient?._id === patient._id
+                                        ? 'bg-slate-900 border-slate-900 text-white shadow-md scale-[1.02]'
+                                        : 'bg-white border-slate-100 text-slate-500 hover:border-emerald-200'
                                         }`}
                                 >
                                     <div className="flex items-center gap-4 text-left">
-                                        <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-[10px] ${selectedPatient?._id === patient._id ? 'bg-[#2D7D6F] text-white' : 'bg-[#F8FBFA] text-[#2D7D6F] border border-[#E2E8F0]'}`}>
+                                        <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-bold text-xs ${selectedPatient?._id === patient._id ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-emerald-600 border border-slate-200'
+                                            }`}>
                                             {patient.fullName[0]}
                                         </div>
-                                        <div>
-                                            <p className={`text-sm font-black tracking-tight ${selectedPatient?._id === patient._id ? 'text-white' : 'text-[#1A202C]'}`}>{patient.fullName}</p>
-                                            <p className={`text-[9px] font-black uppercase tracking-widest mt-1 ${selectedPatient?._id === patient._id ? 'text-white/40' : 'text-[#A0AEC0]'}`}>{patient.email}</p>
+                                        <div className="min-w-0">
+                                            <p className={`text-sm font-bold tracking-tight truncate capitalize ${selectedPatient?._id === patient._id ? 'text-white' : 'text-slate-900'}`}>{patient.fullName}</p>
+                                            <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 truncate ${selectedPatient?._id === patient._id ? 'text-emerald-400/60' : 'text-slate-400'}`}>{patient.email}</p>
                                         </div>
                                     </div>
-                                    <UserPlus size={16} className={selectedPatient?._id === patient._id ? 'text-[#2D7D6F]' : 'text-[#A0AEC0]'} />
+                                    <UserPlus size={16} className={selectedPatient?._id === patient._id ? 'text-emerald-400' : 'text-slate-300'} />
                                 </button>
                             ))}
                         </div>
@@ -145,27 +146,27 @@ const AccessRequests = () => {
                         <AnimatePresence>
                             {selectedPatient && (
                                 <motion.form
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
                                     onSubmit={handleSendRequest}
-                                    className="pt-8 border-t border-[#F1F5F9] space-y-6"
+                                    className="pt-6 border-t border-slate-50 space-y-5"
                                 >
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em] ml-2">Clinical Rationale</label>
+                                    <div className="space-y-2.5">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Clinical Justification</label>
                                         <textarea
                                             required
-                                            placeholder="Detailed justification for clinical data access (e.g., Pre-operative history review)..."
-                                            className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl p-4 text-[#1A202C] text-xs font-bold focus:outline-none focus:border-[#2D7D6F] transition-all min-h-[120px] shadow-inner"
+                                            placeholder="Specify evaluation requirements..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 text-sm font-medium focus:outline-none focus:border-emerald-500 transition-all min-h-[120px] shadow-inner"
                                             value={requestReason}
                                             onChange={(e) => setRequestReason(e.target.value)}
                                         />
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full py-5 bg-[#2D7D6F] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-[#246A5E] transition-all shadow-xl shadow-[#2D7D6F]/20"
+                                        className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2.5 hover:bg-emerald-700 transition-all shadow-lg"
                                     >
-                                        <Send size={14} /> DISPATCH REQUEST
+                                        <Send size={14} /> Dispatch Authorization Request
                                     </button>
                                 </motion.form>
                             )}
@@ -175,44 +176,48 @@ const AccessRequests = () => {
 
                 {/* Sent Requests Tracking */}
                 <div className="space-y-6">
-                    <h3 className="text-xl font-black text-[#1A202C] tracking-tight ml-2">Request Lifecycle</h3>
-                    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden shadow-sm">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Request Log</h3>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{requests.length} Pending Actions</span>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                         {requests.length > 0 ? (
-                            <div className="divide-y divide-[#F1F5F9]">
+                            <div className="divide-y divide-slate-50">
                                 {requests.map((req, idx) => (
                                     <motion.div
-                                        initial={{ opacity: 0, x: 10 }}
+                                        initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.05 }}
                                         key={req._id}
-                                        className="p-8 flex items-center justify-between hover:bg-[#F8FBFA] transition-all group"
+                                        className="p-6 flex items-center justify-between hover:bg-slate-50 transition-all group"
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <div className="h-12 w-12 rounded-2xl bg-white border border-[#E2E8F0] flex items-center justify-center text-[#A0AEC0] group-hover:bg-[#1A202C] group-hover:text-white group-hover:border-[#1A202C] transition-all shadow-sm">
-                                                <UserSearch size={20} />
+                                        <div className="flex items-center gap-4 min-w-0">
+                                            <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm">
+                                                <UserSearch size={18} />
                                             </div>
-                                            <div>
-                                                <p className="font-black text-[#1A202C] tracking-tight">Patient: {req.patient?.fullName}</p>
-                                                <p className="text-[11px] text-[#A0AEC0] font-bold italic mt-1 leading-relaxed">"{req.reason}"</p>
-                                                <div className="flex items-center gap-3 mt-4">
-                                                    <span className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest flex items-center gap-1.5">
-                                                        <Clock size={12} className="text-[#2D7D6F]" />
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-slate-900 tracking-tight truncate capitalize">{req.patient?.fullName}</p>
+                                                <p className="text-[11px] text-slate-400 font-medium italic mt-0.5 truncate">"{req.reason}"</p>
+                                                <div className="flex items-center gap-3 mt-3">
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                                        <Clock size={12} className="text-emerald-500" />
                                                         {new Date(req.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border ${getStatusStyles(req.status)}`}>
+                                        <div className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest border shrink-0 ${getStatusStyles(req.status)}`}>
                                             {req.status}
                                         </div>
                                     </motion.div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="p-28 text-center bg-[#F8FBFA]/30">
-                                <Info className="h-16 w-16 text-[#E2E8F0] mx-auto mb-6" />
-                                <h4 className="text-lg font-black text-[#1A202C] tracking-tight">Stream Empty</h4>
-                                <p className="text-[#A0AEC0] font-bold text-sm mt-2">No active access cycles discovered.</p>
+                            <div className="py-24 text-center bg-slate-50/50">
+                                <Info className="h-12 w-12 text-slate-100 mx-auto mb-4" />
+                                <h4 className="text-base font-bold text-slate-900 tracking-tight">Stream Vacant</h4>
+                                <p className="text-slate-400 font-medium text-xs">No active access cycles discovered.</p>
                             </div>
                         )}
                     </div>
@@ -221,5 +226,4 @@ const AccessRequests = () => {
         </div>
     );
 };
-
 export default AccessRequests;

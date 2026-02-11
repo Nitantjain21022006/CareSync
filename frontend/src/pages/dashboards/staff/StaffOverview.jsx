@@ -88,21 +88,21 @@ const StaffOverview = () => {
                     value={stats.pendingApprovals}
                     subValue="Pending Requests"
                     icon={CalendarCheck}
-                    color="bg-blue-500 text-blue-500"
+                    color="bg-emerald-500 text-emerald-500"
                 />
                 <StatCard
                     title="Active Check-ins"
                     value={stats.checkinsToday}
                     subValue="Today's Intake"
                     icon={UserPlus}
-                    color="bg-cyan-500 text-cyan-500"
+                    color="bg-emerald-400 text-emerald-400"
                 />
                 <StatCard
                     title="Revenue Flow"
                     value={`$${(stats.billedAmount || 0).toLocaleString()}`}
                     subValue="Processed Today"
                     icon={CreditCard}
-                    color="bg-[#2D7D6F] text-[#2D7D6F]"
+                    color="bg-emerald-600 text-emerald-600"
                 />
                 <StatCard
                     title="System Alerts"

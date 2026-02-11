@@ -60,18 +60,26 @@ app.use(helmet({
 // Rate limiting
 app.use(
   rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 100,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes',
     standardHeaders: true,
     legacyHeaders: false,
   })
 );
 
-// Optional request logger (keep or remove)
+// Optional request logger (Removed as per user request to silence terminal)
+/*
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    const sanitizedBody = { ...req.body };
+    if (sanitizedBody.password) sanitizedBody.password = '********';
+    console.log('Request Body:', JSON.stringify(sanitizedBody, null, 2));
+  }
   next();
 });
+*/
 
 /* =========================
    ROUTES

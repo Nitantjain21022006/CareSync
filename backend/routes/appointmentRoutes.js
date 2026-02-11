@@ -5,6 +5,7 @@ import {
     getDoctorAppointments,
     getDoctorTodayAppointments,
     getDoctorStats,
+    getPatientStats,
     getStaffStats,
     getPendingAppointments,
     updateAppointmentStatus
@@ -18,8 +19,9 @@ router.get('/patient/upcoming', protect, authorize('patient'), getPatientUpcomin
 router.get('/doctor', protect, authorize('doctor'), getDoctorAppointments);
 router.get('/doctor/today', protect, authorize('doctor'), getDoctorTodayAppointments);
 router.get('/doctor/stats', protect, authorize('doctor'), getDoctorStats);
+router.get('/patient/stats', protect, authorize('patient'), getPatientStats);
 router.get('/staff/stats', protect, authorize('hospital_staff'), getStaffStats);
 router.get('/staff/pending', protect, authorize('hospital_staff'), getPendingAppointments);
-router.put('/update-status/:id', protect, authorize('hospital_staff', 'admin'), updateAppointmentStatus);
+router.patch('/update-status/:id', protect, authorize('hospital_staff', 'admin', 'doctor'), updateAppointmentStatus);
 
 export default router;

@@ -50,7 +50,7 @@ const SystemLogs = () => {
 
     const getEventBadge = (type) => {
         switch (type) {
-            case 'login': return <span className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">SECURE_LOGIN</span>;
+            case 'login': return <span className="bg-emerald-400/10 text-emerald-600 border border-emerald-100 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">SECURE_LOGIN</span>;
             case 'signup': return <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">NEW_ENTITY</span>;
             case 'security': return <span className="bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">SECURITY_ALERT</span>;
             default: return <span className="bg-[#F8FBFA] text-[#A0AEC0] border border-[#E2E8F0] px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{type}</span>;

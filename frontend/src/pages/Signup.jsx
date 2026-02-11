@@ -12,9 +12,9 @@ import api from '../config/api';
 
 const roles = [
     { id: 'patient', name: 'Patient', icon: User, color: 'bg-slate-700', description: 'Personal health management.' },
-    { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-teal-600', description: 'Clinical practice portal.' },
-    { id: 'admin', name: 'Hospital', icon: Building2, color: 'bg-indigo-700', description: 'Institution infrastructure.' },
-    { id: 'hospital_staff', name: 'Staff', icon: ShieldCheck, color: 'bg-slate-600', description: 'Operations support.' },
+    { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-emerald-600', description: 'Clinical practice portal.' },
+    { id: 'admin', name: 'Hospital', icon: Building2, color: 'bg-emerald-800', description: 'Institution infrastructure.' },
+    { id: 'hospital_staff', name: 'Staff', icon: ShieldCheck, color: 'bg-emerald-700', description: 'Operations support.' },
 ];
 
 const Signup = () => {
@@ -102,7 +102,7 @@ const Signup = () => {
                             <button
                                 key={role.id}
                                 onClick={() => handleRoleSelect(role.id)}
-                                className="group relative p-6 bg-white border-2 border-slate-50 hover:border-teal-500 rounded-2xl transition-all text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)] flex flex-col items-start gap-3"
+                                className="group relative p-6 bg-white border-2 border-slate-50 hover:border-emerald-500 rounded-2xl transition-all text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)] flex flex-col items-start gap-3"
                             >
                                 <div className={`w-12 h-12 ${role.color} text-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-black/5`}>
                                     <role.icon size={24} />
@@ -112,7 +112,7 @@ const Signup = () => {
                                     <p className="text-[10px] text-slate-400 font-bold leading-relaxed">{role.description}</p>
                                 </div>
                                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="w-7 h-7 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                                    <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
                                         <ArrowRight size={14} />
                                     </div>
                                 </div>
@@ -154,7 +154,7 @@ const Signup = () => {
                                             selectedRole === 'doctor' ? "Dr. Shashwat Gohel" :
                                                 selectedRole === 'staff' ? "Emily Roberts" : "Shashwat Gohel"
                                     }
-                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-11"
                                     onChange={handleChange}
                                     value={formData.fullName}
                                 />
@@ -166,7 +166,7 @@ const Signup = () => {
                                     type="tel"
                                     required
                                     placeholder="+91 XXXXX XXXXX"
-                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-11"
                                     onChange={handleChange}
                                     value={formData.phone}
                                 />
@@ -187,7 +187,7 @@ const Signup = () => {
                                         selectedRole === 'doctor' ? "dr.name@caresync.system" :
                                             selectedRole === 'staff' ? "staff.id@caresync.system" : "name@email.com"
                                 }
-                                className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-11"
                                 onChange={handleChange}
                                 value={formData.email}
                             />
@@ -200,7 +200,7 @@ const Signup = () => {
                                     type="password"
                                     required
                                     placeholder="••••••••"
-                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-11"
                                     onChange={handleChange}
                                     value={formData.password}
                                 />
@@ -211,14 +211,14 @@ const Signup = () => {
                                     type="password"
                                     required
                                     placeholder="••••••••"
-                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-11"
+                                    className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-11"
                                 />
                             </div>
                         </div>
                         <button
                             onClick={nextStep}
                             disabled={!isStep2Valid}
-                            className="w-full py-3.5 bg-teal-600 text-white font-black rounded-lg shadow-lg shadow-teal-500/10 hover:bg-teal-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-1 text-[10px] uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0"
+                            className="w-full py-3.5 bg-emerald-600 text-white font-black rounded-lg shadow-lg shadow-emerald-500/10 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-1 text-[10px] uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0"
                         >
                             Continue Registration
                             <ArrowRight size={14} />
@@ -246,11 +246,11 @@ const Signup = () => {
                             <div className="grid grid-cols-2 gap-2.5">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Date of Birth</label>
-                                    <input name="dob" type="date" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.dob} />
+                                    <input name="dob" type="date" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.dob} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Biological Gender</label>
-                                    <select name="gender" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.gender}>
+                                    <select name="gender" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.gender}>
                                         <option value="">Select</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
@@ -259,18 +259,18 @@ const Signup = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Blood Group</label>
-                                    <select name="bloodGroup" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.bloodGroup}>
+                                    <select name="bloodGroup" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.bloodGroup}>
                                         <option value="">Select Group</option>
                                         {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Emergency Contact</label>
-                                    <input name="emergencyContact" required placeholder="+91 XXXXX XXXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.emergencyContact} />
+                                    <input name="emergencyContact" required placeholder="+91 XXXXX XXXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.emergencyContact} />
                                 </div>
                                 <div className="space-y-1 col-span-2">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Permanent Address</label>
-                                    <input name="address" required placeholder="123 Health St, Medical District" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.address} />
+                                    <input name="address" required placeholder="123 Health St, Medical District" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.address} />
                                 </div>
                             </div>
                         )}
@@ -279,19 +279,19 @@ const Signup = () => {
                             <div className="grid grid-cols-2 gap-2.5">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">License ID</label>
-                                    <input name="license" required placeholder="MD-2024-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
+                                    <input name="license" required placeholder="MD-2024-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Primary Specialty</label>
-                                    <input name="specialty" required placeholder="e.g. Cardiology" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty} />
+                                    <input name="specialty" required placeholder="e.g. Cardiology" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Exp. (Years)</label>
-                                    <input name="experience" type="number" required placeholder="e.g 10" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.experience} />
+                                    <input name="experience" type="number" required placeholder="e.g 10" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.experience} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Affiliation</label>
-                                    <input name="workspace" required placeholder="Institution Name" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.workspace} />
+                                    <input name="workspace" required placeholder="Institution Name" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.workspace} />
                                 </div>
                             </div>
                         )}
@@ -300,11 +300,11 @@ const Signup = () => {
                             <div className="grid grid-cols-2 gap-2.5">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Reg. No.</label>
-                                    <input name="license" required placeholder="HOSP-REG-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
+                                    <input name="license" required placeholder="HOSP-REG-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Type</label>
-                                    <select name="hospitalType" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.hospitalType}>
+                                    <select name="hospitalType" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.hospitalType}>
                                         <option value="">Select Type</option>
                                         <option value="General">Multi-Specialty</option>
                                         <option value="Clinic">Specialized Clinic</option>
@@ -313,11 +313,11 @@ const Signup = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Bed Capacity</label>
-                                    <input name="capacity" type="number" required placeholder="e.g. 500" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.capacity} />
+                                    <input name="capacity" type="number" required placeholder="e.g. 500" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.capacity} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Accreditation</label>
-                                    <select name="specialty" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty}>
+                                    <select name="specialty" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty}>
                                         <option value="">Select Level</option>
                                         <option value="NABH">NABH Accredited</option>
                                         <option value="JCI">JCI Accredited</option>
@@ -326,7 +326,7 @@ const Signup = () => {
                                 </div>
                                 <div className="space-y-1 col-span-2">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">HQ Address</label>
-                                    <input name="address" required placeholder="City, Country" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.address} />
+                                    <input name="address" required placeholder="City, Country" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.address} />
                                 </div>
                             </div>
                         )}
@@ -335,11 +335,11 @@ const Signup = () => {
                             <div className="grid grid-cols-2 gap-2.5">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Access ID</label>
-                                    <input name="license" required placeholder="STF-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
+                                    <input name="license" required placeholder="STF-XXXX" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.license} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Sub-Role</label>
-                                    <select name="subRole" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.subRole}>
+                                    <select name="subRole" required className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.subRole}>
                                         <option value="">Select</option>
                                         <option value="Admin">Administration</option>
                                         <option value="Nurse">Nursing Support</option>
@@ -348,11 +348,11 @@ const Signup = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Department</label>
-                                    <input name="specialty" required placeholder="e.g. Radiology" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty} />
+                                    <input name="specialty" required placeholder="e.g. Radiology" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.specialty} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Assigned At</label>
-                                    <input name="workspace" required placeholder="Hospital Name" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-teal-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.workspace} />
+                                    <input name="workspace" required placeholder="Hospital Name" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent rounded-lg outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-sm font-bold h-10" onChange={handleChange} value={formData.workspace} />
                                 </div>
                             </div>
                         )}
@@ -376,7 +376,7 @@ const Signup = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="text-center py-6"
                     >
-                        <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-teal-100 shadow-xl shadow-teal-500/10 rotate-3">
+                        <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-xl shadow-emerald-500/10 rotate-3">
                             <CheckCircle2 size={40} />
                         </div>
                         <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">System Ready</h2>
@@ -385,7 +385,7 @@ const Signup = () => {
                         </p>
                         <Link
                             to="/login"
-                            className="inline-flex items-center gap-3 px-8 py-4 bg-teal-600 text-white font-black rounded-xl hover:bg-teal-700 transition-all shadow-xl shadow-teal-500/10 uppercase tracking-widest text-xs"
+                            className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/10 uppercase tracking-widest text-xs"
                         >
                             Access Workspace <ArrowRight size={16} />
                         </Link>
@@ -396,15 +396,15 @@ const Signup = () => {
     };
 
     return (
-        <div className="h-screen bg-[#F0F7F6] flex items-center justify-center p-4 font-sans overflow-hidden">
+        <div className="h-screen bg-[#F0F9F8] flex items-center justify-center p-4 font-sans overflow-hidden">
             {/* Ambient Background Elements */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
 
             <main className="w-full max-w-6xl flex bg-white rounded-[40px] shadow-[0_32px_80px_rgba(0,0,0,0.08)] border border-white/20 overflow-hidden h-[90vh] max-h-[850px] relative z-10 backdrop-blur-sm">
 
                 {/* Left Side: Progress & Context Sidebar */}
-                <div className="hidden lg:flex w-[35%] flex-col justify-between p-12 bg-gradient-to-br from-[#164E44] via-[#2D7D6F] to-[#164E44] text-white relative overflow-hidden">
+                <div className="hidden lg:flex w-[35%] flex-col justify-between p-12 bg-gradient-to-br from-[#064E3B] via-[#059669] to-[#064E3B] text-white relative overflow-hidden">
                     {/* Abstract Decorative SVG Pattern */}
                     <div className="absolute inset-0 opacity-10 pointer-events-none">
                         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -419,7 +419,7 @@ const Signup = () => {
 
                     <div className="relative z-10">
                         <Link to="/" className="flex items-center gap-3 mb-10 group">
-                            <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-[#2D7D6F] font-black text-lg shadow-xl transform group-hover:rotate-12 transition-transform duration-500">M</div>
+                            <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-[#059669] font-black text-lg shadow-xl transform group-hover:rotate-12 transition-transform duration-500">M</div>
                             <span className="text-xl font-black tracking-tight">CareSync</span>
                         </Link>
 
@@ -427,9 +427,9 @@ const Signup = () => {
                             <div>
                                 <h1 className="text-3xl font-black leading-[1.1] tracking-tight mb-3">
                                     Join the <br />
-                                    <span className="text-teal-300">Global Network</span>
+                                    <span className="text-emerald-300">Global Network</span>
                                 </h1>
-                                <p className="text-teal-50/70 text-xs leading-relaxed max-w-xs font-medium">
+                                <p className="text-emerald-50/70 text-xs leading-relaxed max-w-xs font-medium">
                                     Secure your professional identity and connect with the world's leading medical ecosystem.
                                 </p>
                             </div>
@@ -441,12 +441,12 @@ const Signup = () => {
                                     { s: 3, t: 'Verification', d: 'Credential validation' }
                                 ].map((item) => (
                                     <div key={item.s} className={`flex items-start gap-4 transition-all duration-700 ${step >= item.s ? 'opacity-100' : 'opacity-20'}`}>
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black border-2 transition-all duration-500 scale-90 ${step >= item.s ? 'bg-white border-white text-[#2D7D6F] shadow-xl rotate-3 scale-110' : 'border-white/20 text-white'}`}>
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black border-2 transition-all duration-500 scale-90 ${step >= item.s ? 'bg-white border-white text-[#059669] shadow-xl rotate-3 scale-110' : 'border-white/20 text-white'}`}>
                                             {step > item.s ? <CheckCircle2 size={16} strokeWidth={3} /> : item.s}
                                         </div>
                                         <div className="space-y-0.5">
                                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">{item.t}</h4>
-                                            <p className="text-[9px] text-teal-300/60 font-bold">{item.d}</p>
+                                            <p className="text-[9px] text-emerald-300/60 font-bold">{item.d}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -455,7 +455,7 @@ const Signup = () => {
                     </div>
 
                     <div className="relative z-10">
-                        <p className="text-[9px] font-black text-teal-500/50 uppercase tracking-[0.4em]">
+                        <p className="text-[9px] font-black text-emerald-500/50 uppercase tracking-[0.4em]">
                             Secure Enterprise Architecture // v4.2
                         </p>
                     </div>
@@ -465,14 +465,14 @@ const Signup = () => {
                 <div className="flex-1 flex flex-col bg-white overflow-hidden">
                     <header className="p-6 lg:px-12 flex items-center justify-between shrink-0">
                         <div className="lg:hidden flex items-center gap-2">
-                            <div className="w-10 h-10 bg-[#2D7D6F] rounded-xl flex items-center justify-center text-white shadow-xl text-lg font-black">M</div>
-                            <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">CareSync</span>
+                            <div className="w-10 h-10 bg-[#059669] rounded-xl flex items-center justify-center text-white shadow-xl text-lg font-black">M</div>
+                            <span className="text-2xl font-black text-[#059669] tracking-tight">CareSync</span>
                         </div>
                         <div className="hidden lg:block h-1 w-24 bg-slate-50 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: "33%" }}
                                 animate={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }}
-                                className="h-full bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)] transition-all duration-700"
+                                className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-700"
                             />
                         </div>
                         <div className="flex items-center gap-4">

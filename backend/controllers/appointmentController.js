@@ -1,16 +1,20 @@
 import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';
+import { sendEmail } from '../utils/email.js';
 
 // @desc    Get upcoming appointments for patient
 // @route   GET /api/appointments/patient/upcoming
 // @access  Private (Patient)
 export const getPatientUpcomingAppointments = async (req, res) => {
     try {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+
         const appointments = await Appointment.find({
             patient: req.user.id,
             status: { $in: ['pending', 'confirmed'] },
-            date: { $gte: new Date() }
-        }).populate('doctor', 'fullName email');
+            date: { $gte: today }
+        }).populate('doctor', 'fullName email metadata');
 
         res.status(200).json({ success: true, count: appointments.length, data: appointments });
     } catch (err) {
@@ -23,10 +27,44 @@ export const getPatientUpcomingAppointments = async (req, res) => {
 // @access  Private (Patient)
 export const bookAppointment = async (req, res) => {
     try {
-        req.body.patient = req.user.id;
-        const appointment = await Appointment.create(req.body);
+        const { doctor, date, timeSlot, type, reason } = req.body;
+        const patientId = req.user.id;
+
+        const appointment = await Appointment.create({
+            patient: patientId,
+            doctor,
+            date,
+            timeSlot,
+            status: 'pending',
+            reason: reason || (type === 'Virtual' ? 'Tele-consultation' : 'In-person Consultation')
+        });
+
+        // Notify Doctor
+        const doctorUser = await User.findById(doctor);
+        const patientUser = await User.findById(patientId);
+
+        if (doctorUser && patientUser) {
+            const subject = 'New Appointment Request - CareSync';
+            const htmlContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #2D7D6F;">New Consultation Requested</h2>
+                    <p><strong>Patient:</strong> ${patientUser.fullName}</p>
+                    <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
+                    <p><strong>Time Slot:</strong> ${timeSlot}</p>
+                    <p>Please log in to your dashboard to confirm or reschedule this request.</p>
+                    <a href="${process.env.FRONTEND_URL}/dashboard/doctor" style="background: #1A202C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Dashboard</a>
+                </div>
+            `;
+            try {
+                await sendEmail(doctorUser.email, subject, htmlContent);
+            } catch (err) {
+                console.error('Email notification to doctor failed');
+            }
+        }
+
         res.status(201).json({ success: true, data: appointment });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
@@ -37,14 +75,15 @@ export const bookAppointment = async (req, res) => {
 export const getDoctorTodayAppointments = async (req, res) => {
     try {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setUTCHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
         const appointments = await Appointment.find({
             doctor: req.user.id,
-            date: { $gte: today, $lt: tomorrow }
-        }).populate('patient', 'fullName email');
+            date: { $gte: today, $lt: tomorrow },
+            status: { $ne: 'cancelled' }
+        }).populate('patient', 'fullName email metadata');
 
         res.status(200).json({ success: true, count: appointments.length, data: appointments });
     } catch (err) {
@@ -59,9 +98,43 @@ export const getDoctorAppointments = async (req, res) => {
     try {
         const appointments = await Appointment.find({
             doctor: req.user.id
-        }).populate('patient', 'fullName email');
+        }).populate('patient', 'fullName email metadata');
 
         res.status(200).json({ success: true, count: appointments.length, data: appointments });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Get patient dashboard stats
+// @route   GET /api/appointments/patient/stats
+// @access  Private (Patient)
+export const getPatientStats = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+
+        const upcomingCount = await Appointment.countDocuments({
+            patient: req.user.id,
+            status: { $in: ['pending', 'confirmed'] },
+            date: { $gte: today }
+        });
+
+        const MedicalRecord = (await import('../models/MedicalRecord.js')).default;
+        const totalRecords = await MedicalRecord.countDocuments({ patient: req.user.id });
+        const activePrescriptions = await MedicalRecord.countDocuments({
+            patient: req.user.id,
+            recordType: 'prescription'
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                upcomingAppointments: upcomingCount,
+                totalRecords,
+                activePrescriptions
+            }
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Server Error' });
     }
@@ -73,42 +146,48 @@ export const getDoctorAppointments = async (req, res) => {
 export const getDoctorStats = async (req, res) => {
     try {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setUTCHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
         const todayCount = await Appointment.countDocuments({
             doctor: req.user.id,
-            date: { $gte: today, $lt: tomorrow }
+            date: { $gte: today, $lt: tomorrow },
+            status: { $ne: 'cancelled' }
         });
 
         const upcomingCount = await Appointment.countDocuments({
             doctor: req.user.id,
-            date: { $gte: tomorrow }
+            date: { $gte: tomorrow },
+            status: { $ne: 'cancelled' }
+        });
+
+        const consultations = await Appointment.countDocuments({
+            doctor: req.user.id,
+            status: 'confirmed'
+        });
+
+        // Get pending appointments count for "Pending Approvals" stat
+        const pendingAppointments = await Appointment.countDocuments({
+            doctor: req.user.id,
+            status: 'pending'
         });
 
         // Get pending access requests for this doctor
-        const doctorCount = await User.countDocuments({ role: 'doctor' });
-        const patientCount = await User.countDocuments({ role: 'patient' });
-        const staffCount = await User.countDocuments({ role: 'hospital_staff' });
-        const appointmentCount = await Appointment.countDocuments();
-
-        // Calculate an activity score based on recent appointments (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const recentAppointments = await Appointment.countDocuments({ createdAt: { $gte: thirtyDaysAgo } });
-        const activityScore = Math.min(100, Math.round((recentAppointments / 20) * 100)) + '%';
+        const AccessRequest = (await import('../models/AccessRequest.js')).default;
+        const pendingAccessRequests = await AccessRequest.countDocuments({
+            doctor: req.user.id,
+            status: 'pending'
+        });
 
         res.status(200).json({
             success: true,
             data: {
-                totalDoctors: doctorCount,
-                totalPatients: patientCount,
-                totalStaff: staffCount,
-                appointmentCount,
-                departments: 8, // Realistically 8 main departments
-                systemUptime: "99.98%",
-                activityScore
+                todayPatients: todayCount,
+                pendingRequests: pendingAccessRequests, // Keep for legacy if needed
+                pendingAppointments,
+                consultations,
+                upcomingAppointments: upcomingCount
             }
         });
     } catch (err) {
@@ -169,13 +248,45 @@ export const getPendingAppointments = async (req, res) => {
 // @access  Private (Staff/Admin)
 export const updateAppointmentStatus = async (req, res) => {
     try {
-        const appointment = await Appointment.findById(req.params.id);
+        const appointment = await Appointment.findById(req.params.id)
+            .populate('patient', 'fullName email metadata')
+            .populate('doctor', 'fullName email metadata');
+
         if (!appointment) {
             return res.status(404).json({ success: false, error: 'Appointment not found' });
         }
 
+        // Authorization check
+        if (req.user.role === 'doctor' && appointment.doctor._id.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, error: 'Not authorized to update this appointment' });
+        }
+
         appointment.status = req.body.status;
+        if (req.body.date) appointment.date = req.body.date;
+        if (req.body.timeSlot) appointment.timeSlot = req.body.timeSlot;
+        if (req.body.notes) appointment.notes = req.body.notes;
+
         await appointment.save();
+
+        // Notify Patient if confirmed
+        if (req.body.status === 'confirmed') {
+            const subject = 'Consultation Confirmed - CareSync';
+            const htmlContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #2D7D6F;">Consultation Confirmed</h2>
+                    <p>Your appointment with <strong>Dr. ${appointment.doctor.fullName}</strong> has been confirmed.</p>
+                    <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
+                    <p><strong>Time Slot:</strong> ${appointment.timeSlot}</p>
+                    <p>You can view the details in your patient portal.</p>
+                    <a href="${process.env.FRONTEND_URL}/dashboard/patient/appointments" style="background: #1A202C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">My Appointments</a>
+                </div>
+            `;
+            try {
+                await sendEmail(appointment.patient.email, subject, htmlContent);
+            } catch (err) {
+                console.error('Email notification to patient failed');
+            }
+        }
 
         res.status(200).json({ success: true, data: appointment });
     } catch (err) {

@@ -103,14 +103,14 @@ const AdminOverview = () => {
                     value={stats.totalDoctors}
                     subValue="+5 new applications"
                     icon={ShieldCheck}
-                    color="bg-blue-500"
+                    color="bg-emerald-500"
                 />
                 <StatCard
                     title="Active Patients"
                     value={stats.totalPatients >= 1000 ? `${(stats.totalPatients / 1000).toFixed(1)}k` : stats.totalPatients}
                     subValue="+82 this month"
                     icon={Users}
-                    color="bg-[#2D7D6F]"
+                    color="bg-emerald-700"
                 />
                 <StatCard
                     title="Hospital Staff"
@@ -196,8 +196,8 @@ const AdminOverview = () => {
                         </h3>
                         <div className="space-y-6 relative z-10">
                             {[
-                                { icon: UserPlus, text: 'New Patient Registration', time: '2m ago', color: 'text-blue-400' },
-                                { icon: Video, text: 'Tele-consultation Started', time: '5m ago', color: 'text-[#2D7D6F]' },
+                                { icon: UserPlus, text: 'New Patient Registration', time: '2m ago', color: 'text-emerald-400' },
+                                { icon: Video, text: 'Tele-consultation Started', time: '5m ago', color: 'text-emerald-600' },
                                 { icon: ShieldCheck, text: 'Doctor Verified: Dr. Smith', time: '12m ago', color: 'text-emerald-400' }
                             ].map((event, i) => (
                                 <div key={i} className="flex gap-4 group cursor-pointer">
@@ -219,7 +219,7 @@ const AdminOverview = () => {
                         <h3 className="text-lg font-black text-[#1A202C] mb-6">Quick Governance</h3>
                         <div className="grid grid-cols-2 gap-4">
                             {[
-                                { label: 'Audit Logs', color: 'bg-blue-50' },
+                                { label: 'Audit Logs', color: 'bg-emerald-100' },
                                 { label: 'Compliance', color: 'bg-amber-50' },
                                 { label: 'Reports', color: 'bg-emerald-50' },
                                 { label: 'Config', color: 'bg-purple-50' }

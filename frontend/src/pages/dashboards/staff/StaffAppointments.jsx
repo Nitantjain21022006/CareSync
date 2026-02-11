@@ -181,7 +181,7 @@ const StaffAppointments = () => {
                                                 </button>
                                             </div>
                                             <div className="md:block hidden group-hover:hidden">
-                                                <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 uppercase tracking-widest">Awaiting</span>
+                                                <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 uppercase tracking-widest">Awaiting</span>
                                             </div>
                                         </td>
                                     </motion.tr>

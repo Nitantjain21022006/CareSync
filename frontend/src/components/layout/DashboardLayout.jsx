@@ -11,7 +11,8 @@ import {
     ChevronRight,
     Search,
     Bell,
-    UserCircle
+    UserCircle,
+    ArrowLeft
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -59,7 +60,7 @@ const DashboardLayout = ({ children, role, links }) => {
                 </div>
 
                 <div className="relative z-10">
-                    <Link to="/" className="flex items-center gap-3 mb-12 group">
+                    <Link to="/dashboard" className="flex items-center gap-3 mb-12 group">
                         <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#2D7D6F] font-black text-xl shadow-xl transform group-hover:rotate-12 transition-transform duration-500">M</div>
                         <span className="text-2xl font-black text-white tracking-tighter">CareSync</span>
                     </Link>
@@ -85,11 +86,11 @@ const DashboardLayout = ({ children, role, links }) => {
 
                     <div className="mt-6 p-4 bg-white/5 rounded-2xl border border-white/10">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-teal-400/20 flex items-center justify-center">
-                                <Lock size={14} className="text-teal-300" />
+                            <div className="w-8 h-8 rounded-full bg-emerald-400/20 flex items-center justify-center">
+                                <Lock size={14} className="text-emerald-300" />
                             </div>
                             <div className="flex-1">
-                                <p className="text-[10px] font-black text-teal-300 uppercase tracking-wider">Security</p>
+                                <p className="text-[10px] font-black text-emerald-300 uppercase tracking-wider">Security</p>
                                 <p className="text-[9px] text-white/50 font-medium leading-none">V2.4 Encryption Active</p>
                             </div>
                         </div>
@@ -110,9 +111,20 @@ const DashboardLayout = ({ children, role, links }) => {
                                 className="bg-transparent border-none outline-none px-3 text-sm font-medium w-64 placeholder:text-slate-400 text-slate-700"
                             />
                         </div>
-                        <div className="lg:hidden flex items-center gap-2">
-                            <div className="w-8 h-8 bg-[#2D7D6F] rounded-lg flex items-center justify-center text-white font-black">M</div>
-                        </div>
+                        <Link to="/dashboard" className="lg:hidden flex items-center gap-3">
+                            <div className="w-8 h-8 bg-[#2D7D6F] rounded-lg flex items-center justify-center text-white font-black shadow-lg">M</div>
+                            <span className="text-lg font-black text-slate-900 tracking-tighter">CareSync</span>
+                        </Link>
+                    </div>
+
+                    <div className="hidden md:flex items-center">
+                        <Link
+                            to="/dashboard"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-[#F1F5F9] text-slate-600 hover:bg-[#2D7D6F] hover:text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-sm hover:shadow-lg hover:shadow-[#2D7D6F]/20 group"
+                        >
+                            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                            Back to Dashboard
+                        </Link>
                     </div>
 
                     <div className="flex items-center gap-6">

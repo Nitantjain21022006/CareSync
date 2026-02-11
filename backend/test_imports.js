@@ -1,0 +1,17 @@
+import connectDB from './config/db.js';
+console.log('db loaded');
+import User from './models/User.js';
+console.log('user loaded');
+import authRoutes from './routes/authRoutes.js';
+console.log('authRoutes loaded');
+import appointmentRoutes from './routes/appointmentRoutes.js';
+console.log('appointmentRoutes loaded');
+import recordRoutes from './routes/recordRoutes.js';
+console.log('recordRoutes loaded');
+import billingRoutes from './routes/billingRoutes.js';
+console.log('billingRoutes loaded');
+import adminRoutes from './routes/adminRoutes.js';
+console.log('adminRoutes loaded');
+import mlRoutes from './routes/mlRoutes.js';
+console.log('mlRoutes loaded');
+console.log('All modules loaded successfully');

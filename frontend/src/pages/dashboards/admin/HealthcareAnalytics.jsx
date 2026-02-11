@@ -77,7 +77,7 @@ const HealthcareAnalytics = () => {
                     change="+12.5%"
                     isPositive={true}
                     icon={Users}
-                    color="bg-blue-500 text-blue-500"
+                    color="bg-emerald-400 text-emerald-400"
                 />
                 <AnalyticsCard
                     title="Total Appointments"
@@ -149,7 +149,7 @@ const HealthcareAnalytics = () => {
                                 { label: 'General Medicine', val: 65, color: 'bg-[#2D7D6F]' },
                                 { label: 'Cardiology', val: 42, color: 'bg-red-400' },
                                 { label: 'Neurology', val: 38, color: 'bg-amber-400' },
-                                { label: 'Pediatrics', val: 25, color: 'bg-blue-400' }
+                                { label: 'Pediatrics', val: 25, color: 'bg-emerald-300' }
                             ].map((item, i) => (
                                 <div key={i} className="space-y-2">
                                     <div className="flex justify-between text-[10px] font-black uppercase tracking-wider">

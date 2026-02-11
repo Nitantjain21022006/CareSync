@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import AuthLog from '../models/AuthLog.js';
+import DoctorPatient from '../models/DoctorPatient.js';
+import { sendEmail } from '../utils/email.js';
 
 // Helper to set cookie
 const sendTokenResponse = (user, statusCode, res) => {
@@ -76,15 +78,18 @@ export const login = async (req, res, next) => {
     try {
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
+            console.log(`Login failure: User not found with email ${email}`);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
+            console.log(`Login failure: Password mismatch for user ${email}`);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
         if (role && user.role !== role) {
+            console.log(`Login failure: Role mismatch for user ${email}. Expected ${role}, found ${user.role}`);
             return res.status(403).json({ success: false, error: `Unauthorized role: ${role}` });
         }
 
@@ -155,6 +160,87 @@ export const getPatients = async (req, res, next) => {
         const patients = await User.find({ role: 'patient' }).select('fullName email phone metadata');
         res.status(200).json({ success: true, count: patients.length, data: patients });
     } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateProfile = async (req, res, next) => {
+    try {
+        const { fullName, phone, metadata } = req.body;
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        if (fullName) user.fullName = fullName;
+        if (phone) user.phone = phone;
+        if (metadata) {
+            user.metadata = { ...user.metadata, ...metadata };
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: user
+        });
+    } catch (err) {
+        console.error('Update Profile Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Add a doctor (Patient)
+// @route   POST /api/auth/add-doctor
+// @access  Private (Patient)
+export const addDoctor = async (req, res, next) => {
+    try {
+        const { doctorId } = req.body;
+        const patientId = req.user.id;
+
+        const doctor = await User.findOne({ _id: doctorId, role: 'doctor' });
+        if (!doctor) {
+            return res.status(404).json({ success: false, error: 'Doctor not found' });
+        }
+
+        const existingLink = await DoctorPatient.findOne({ doctor: doctorId, patient: patientId });
+        if (existingLink) {
+            return res.status(400).json({ success: false, error: 'Doctor already added' });
+        }
+
+        await DoctorPatient.create({
+            doctor: doctorId,
+            patient: patientId
+        });
+
+        // Notify Doctor
+        const patient = await User.findById(patientId);
+        const subject = 'New Patient Added - CareSync';
+        const htmlContent = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #2D7D6F;">New Patient Added</h2>
+                <p>Hello Dr. ${doctor.fullName},</p>
+                <p>A new patient, <strong>${patient.fullName}</strong>, has added you to their care team.</p>
+                <p>A patient folder has been created in your dashboard for clinical record management.</p>
+                <a href="${process.env.FRONTEND_URL}/dashboard/doctor" style="background: #1A202C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Dashboard</a>
+            </div>
+        `;
+
+        try {
+            await sendEmail(doctor.email, subject, htmlContent);
+        } catch (err) {
+            console.error('Email notification to doctor failed');
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Doctor added successfully'
+        });
+    } catch (err) {
+        console.error('Add Doctor Error:', err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };

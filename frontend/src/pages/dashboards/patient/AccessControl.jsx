@@ -74,17 +74,17 @@ const AccessControl = () => {
 
     return (
         <div className="space-y-8 pb-12">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-[#1A202C] tracking-tighter flex items-center gap-4">
-                        Privacy Infrastructure
+                    <h1 className="text-5xl font-black text-slate-900 tracking-tighter flex items-center gap-4">
+                        Privacy Shield
                     </h1>
-                    <p className="text-[#a0aec0] font-bold text-sm tracking-tight mt-1">Manage clinical authorizations and historical data visibility.</p>
+                    <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mt-3 ml-1">Manage clinical authorizations & historical visibility.</p>
                 </div>
-                <div className="flex gap-3">
-                    <div className="px-6 py-3 bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl flex items-center gap-3">
-                        <LockIcon size={16} className="text-[#2D7D6F]" />
-                        <span className="text-[10px] font-black text-[#1A202C] uppercase tracking-widest">State: Secure</span>
+                <div className="flex gap-4">
+                    <div className="px-8 py-4 bg-slate-50 border border-slate-100 rounded-[22px] flex items-center gap-4 shadow-inner">
+                        <LockIcon size={18} className="text-emerald-500" />
+                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Protocol: V4 SECURE</span>
                     </div>
                 </div>
             </div>
@@ -92,16 +92,16 @@ const AccessControl = () => {
             <AnimatePresence>
                 {message.text && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className={`p-6 rounded-[1.5rem] flex items-center justify-between shadow-2xl ${message.type === 'success' ? 'bg-[#2D7D6F] text-white shadow-[#2D7D6F]/20' : 'bg-red-500 text-white shadow-red-500/20'
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className={`p-8 rounded-[30px] flex items-center justify-between shadow-3xl mb-8 ${message.type === 'success' ? 'bg-slate-900 text-white shadow-emerald-500/20' : 'bg-rose-600 text-white shadow-rose-500/20'
                             }`}>
-                        <div className="flex items-center gap-4">
-                            {message.type === 'success' ? <UserCheck className="h-6 w-6" /> : <ShieldAlert className="h-6 w-6" />}
-                            <span className="text-xs font-black uppercase tracking-[0.1em]">{message.text}</span>
+                        <div className="flex items-center gap-6">
+                            {message.type === 'success' ? <UserCheck className="h-7 w-7 text-emerald-400" /> : <ShieldAlert className="h-7 w-7 text-rose-200" />}
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{message.text}</span>
                         </div>
-                        <button onClick={() => setMessage({ type: '', text: '' })}><X size={18} /></button>
+                        <button onClick={() => setMessage({ type: '', text: '' })} className="hover:rotate-90 transition-transform"><X size={20} /></button>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -109,72 +109,72 @@ const AccessControl = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Active Access List */}
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xl font-black text-[#1A202C] tracking-tight flex items-center gap-3">
-                            <ShieldCheck className="h-6 w-6 text-[#205E53]" />
-                            Authorized Clinicians
+                    <div className="flex items-center justify-between px-4">
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4">
+                            <ShieldCheck className="h-7 w-7 text-emerald-500" />
+                            Authorized Entities
                         </h3>
-                        <span className="text-[9px] font-black text-[#2D7D6F] bg-[#E9F5F3] border border-[#D1E8E4] px-3 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
+                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-2xl uppercase tracking-[0.2em] shadow-sm">
                             {authorizedDoctors.length} ACTIVE_NODES
                         </span>
                     </div>
 
-                    <div className="bg-white border border-[#E2E8F0] rounded-[2.5rem] overflow-hidden shadow-sm">
+                    <div className="bg-white border border-slate-100 rounded-[50px] overflow-hidden shadow-xl">
                         {loading ? (
                             <div className="p-10 space-y-6">
                                 {[1, 2].map(i => <div key={i} className="h-24 bg-[#F8FBFA] animate-pulse rounded-[1.5rem]"></div>)}
                             </div>
                         ) : authorizedDoctors.length > 0 ? (
-                            <div className="divide-y divide-[#F1F5F9]">
+                            <div className="divide-y divide-slate-50">
                                 {authorizedDoctors.map((doc, idx) => (
                                     <motion.div
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.05 }}
                                         key={doc._id}
-                                        className="p-8 flex items-center justify-between hover:bg-[#F8FBFA] transition-all group"
+                                        className="p-10 flex items-center justify-between hover:bg-slate-50 transition-all group"
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <div className="h-14 w-14 rounded-2xl bg-[#E9F5F3] border border-[#D1E8E4] flex items-center justify-center text-[#2D7D6F] font-black shadow-sm group-hover:bg-[#2D7D6F] group-hover:text-white transition-all">
+                                        <div className="flex items-center gap-6">
+                                            <div className="h-16 w-16 rounded-[22px] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
                                                 {doc.fullName[0]}
                                             </div>
                                             <div>
-                                                <p className="font-black text-[#1A202C] text-lg tracking-tight">Dr. {doc.fullName}</p>
-                                                <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-[0.2em] mt-1">{doc.metadata?.specialization || 'Clinical Specialist'}</p>
+                                                <p className="font-black text-slate-900 text-xl tracking-tighter">Dr. {doc.fullName}</p>
+                                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] mt-1.5">{doc.metadata?.specialization || 'Clinical Specialist'}</p>
                                             </div>
                                         </div>
                                         <motion.button
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => handleRevokeAccess(doc._id)}
-                                            className="group/btn relative px-6 py-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-red-100 shadow-sm"
+                                            className="group/btn relative px-8 py-4 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border border-rose-100 shadow-sm"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <UserX size={14} />
-                                                REVOKE_ACCESS
+                                                <UserX size={16} />
+                                                TERMINATE_ACCESS
                                             </div>
                                         </motion.button>
                                     </motion.div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="p-24 text-center bg-[#F8FBFA]/30">
-                                <ShieldAlert className="h-16 w-16 text-[#E2E8F0] mx-auto mb-6" />
-                                <h4 className="text-xl font-black text-[#1A202C] tracking-tight">Access Log Isolated</h4>
-                                <p className="text-[#A0AEC0] font-bold text-sm mt-2 max-w-sm mx-auto">No clinical entities currently possess authorization for your historical medical records.</p>
+                            <div className="p-32 text-center bg-slate-50/50">
+                                <ShieldAlert className="h-20 w-20 text-slate-100 mx-auto mb-8" />
+                                <h4 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Access Log Isolated</h4>
+                                <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mt-4 max-w-sm mx-auto leading-relaxed">No clinical entities currently possess authorization for your historical medical records.</p>
                             </div>
                         )}
                     </div>
 
-                    <div className="bg-[#1A202C] rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#2D7D6F]/20 rounded-bl-full -z-0"></div>
-                        <div className="flex gap-6 relative z-10">
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl h-fit">
-                                <Info size={24} className="text-[#2D7D6F]" />
+                    <div className="bg-slate-900 rounded-[50px] p-12 text-white shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] -mr-16 -mt-16 opacity-60" />
+                        <div className="flex gap-8 relative z-10">
+                            <div className="p-5 bg-white/5 border border-white/10 rounded-3xl h-fit shadow-inner transform group-hover:rotate-6 transition-transform">
+                                <Info size={30} className="text-emerald-400" />
                             </div>
-                            <div className="space-y-4">
-                                <h4 className="text-2xl font-black tracking-tight">Privacy Protocol</h4>
-                                <p className="text-xs font-bold text-white/50 leading-relaxed max-w-md">
-                                    Authorization granting permits clinical stakeholders to synchronize with your complete diagnostic history. Access remains active until manual retraction sequence is initiated.
+                            <div className="space-y-6">
+                                <h4 className="text-3xl font-black tracking-tighter">Privacy Protocol V2</h4>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-relaxed max-w-md">
+                                    Authorization permits clinical stakeholders to synchronize with your complete diagnostic history. Access remains active until manual retraction sequence is initiated.
                                 </p>
                             </div>
                         </div>
@@ -183,18 +183,20 @@ const AccessControl = () => {
 
                 {/* Grant New Access */}
                 <div className="space-y-6">
-                    <h3 className="text-xl font-black text-[#1A202C] tracking-tight flex items-center gap-3 ml-2">
-                        <UserPlus className="h-6 w-6 text-[#2D7D6F]" />
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4 ml-4">
+                        <UserPlus className="h-7 w-7 text-emerald-500" />
                         Provision New Access
                     </h3>
 
-                    <div className="bg-white border border-[#E2E8F0] rounded-[3rem] p-10 space-y-10 shadow-sm">
-                        <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A0AEC0]" />
+                    <div className="bg-white border border-slate-100 rounded-[50px] p-12 space-y-12 shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-[80px] -mr-32 -mt-32 opacity-40" />
+
+                        <div className="relative z-10">
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
                             <input
                                 type="text"
-                                placeholder="Identify specialist by name or clinical segment..."
-                                className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-5 pl-12 pr-6 text-xs font-black text-[#1A202C] placeholder-[#A0AEC0] focus:outline-none focus:border-[#2D7D6F] transition-all shadow-sm"
+                                placeholder="Identify specialist by name or segment..."
+                                className="w-full bg-slate-50 border border-transparent rounded-[25px] py-6 pl-16 pr-8 text-[11px] font-black text-slate-900 placeholder-slate-300 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner uppercase tracking-widest"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -208,23 +210,23 @@ const AccessControl = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.05 }}
                                         key={doc._id}
-                                        className="p-6 bg-white border border-[#F1F5F9] rounded-[1.5rem] flex items-center justify-between hover:border-[#2D7D6F] hover:shadow-xl hover:shadow-[#2D7D6F]/5 transition-all group"
+                                        className="p-8 bg-slate-50/30 border border-transparent rounded-[30px] flex items-center justify-between hover:border-emerald-200 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/5 transition-all group relative z-10"
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <div className="h-12 w-12 rounded-xl bg-[#F8FBFA] flex items-center justify-center text-[#2D7D6F] font-black border border-[#E2E8F0] group-hover:bg-[#1A202C] group-hover:text-white group-hover:border-[#1A202C] transition-all shadow-sm">
+                                        <div className="flex items-center gap-6">
+                                            <div className="h-14 w-14 rounded-[20px] bg-white flex items-center justify-center text-slate-300 font-black border border-slate-100 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm transform group-hover:-rotate-3">
                                                 {doc.fullName[0]}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-[#1A202C] tracking-tight">Dr. {doc.fullName}</p>
-                                                <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-[0.2em] mt-1">{doc.metadata?.specialization || 'Clinician'}</p>
+                                                <p className="text-base font-black text-slate-900 tracking-tighter">Dr. {doc.fullName}</p>
+                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1.5">{doc.metadata?.specialization || 'Clinician'}</p>
                                             </div>
                                         </div>
                                         <motion.button
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleGrantAccess(doc._id)}
-                                            className="p-4 bg-[#E9F5F3] text-[#2D7D6F] hover:bg-[#2D7D6F] hover:text-white rounded-2xl transition-all border border-[#D1E8E4] shadow-sm"
+                                            className="p-5 bg-white text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-[20px] transition-all border border-emerald-100 shadow-sm"
                                         >
-                                            <UserPlus size={18} />
+                                            <UserPlus size={20} />
                                         </motion.button>
                                     </motion.div>
                                 ))
@@ -234,9 +236,9 @@ const AccessControl = () => {
                                     <p className="text-[#A0AEC0] font-black uppercase tracking-widest text-[10px]">No identity matches discovered</p>
                                 </div>
                             ) : (
-                                <div className="py-20 text-center opacity-40">
-                                    <Search size={32} className="mx-auto mb-4 text-[#A0AEC0]" />
-                                    <p className="text-[#1A202C] font-black uppercase tracking-[0.2em] text-[10px]">Enter search parameters</p>
+                                <div className="py-24 text-center opacity-40">
+                                    <Search size={40} className="mx-auto mb-6 text-slate-200" />
+                                    <p className="text-slate-900 font-black uppercase tracking-[0.3em] text-[10px]">Awaiting parameters...</p>
                                 </div>
                             )}
                         </div>

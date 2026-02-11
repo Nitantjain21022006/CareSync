@@ -26,6 +26,9 @@ const PatientRecords = () => {
     const [doctors, setDoctors] = useState([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingRecord, setEditingRecord] = useState(null);
 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -61,17 +64,26 @@ const PatientRecords = () => {
 
     const handleUpload = async (e) => {
         e.preventDefault();
+        if (!selectedFile) {
+            alert('Please select a file to upload');
+            return;
+        }
+
         setSubmitting(true);
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            await api.post('/records', {
-                ...newRecord,
-                patient: user._id,
-                fileUrl: 'https://example.com/record.pdf'
-            });
+            const formData = new FormData();
+            formData.append('title', newRecord.title);
+            formData.append('recordType', newRecord.recordType);
+            formData.append('description', newRecord.description);
+            formData.append('doctor', newRecord.doctor);
+            formData.append('file', selectedFile);
+
+            await api.post('/records', formData);
+
             setIsUploadModalOpen(false);
             fetchRecords();
             setNewRecord({ title: '', recordType: 'prescription', description: '', doctor: doctors[0]?._id || '' });
+            setSelectedFile(null);
             alert('Medical record uploaded successfully');
         } catch (err) {
             alert(err.response?.data?.error || 'Upload failed');
@@ -86,6 +98,39 @@ const PatientRecords = () => {
         const matchesDoctor = !doctorFilter || r.doctor?._id === doctorFilter || r.doctor === doctorFilter;
         return matchesSearch && matchesType && matchesDoctor;
     });
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to permanently delete this medical record? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            await api.delete(`/records/${id}`);
+            setRecords(prev => prev.filter(r => r._id !== id));
+            alert('Medical record deleted successfully');
+        } catch (err) {
+            console.error('Delete failed:', err);
+            alert(err.response?.data?.error || 'Failed to delete record');
+        }
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.put(`/records/${editingRecord._id}`, {
+                title: editingRecord.title,
+                recordType: editingRecord.recordType,
+                description: editingRecord.description
+            });
+            alert('Medical record updated successfully');
+            window.location.reload();
+        } catch (err) {
+            alert(err.response?.data?.error || 'Update failed');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const categories = [
         { id: 'all', label: 'All Files' },
@@ -167,10 +212,29 @@ const PatientRecords = () => {
                                     <FileType className="h-6 w-6" />
                                 </div>
                                 <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0">
-                                    <button className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
-                                        <Download className="h-4 w-4" />
+                                    {record.fileUrl && (
+                                        <a
+                                            href={(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/' + record.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 transition-all shadow-sm"
+                                        >
+                                            <Download className="h-4 w-4" />
+                                        </a>
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            setEditingRecord({ ...record });
+                                            setIsEditModalOpen(true);
+                                        }}
+                                        className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 transition-all shadow-sm"
+                                    >
+                                        <Edit2 className="h-4 w-4" />
                                     </button>
-                                    <button className="p-2 bg-rose-50 border border-rose-100 rounded-lg text-rose-400 hover:text-rose-600 transition-all shadow-sm">
+                                    <button
+                                        onClick={() => handleDelete(record._id)}
+                                        className="p-2 bg-rose-50 border border-rose-100 rounded-lg text-rose-400 hover:text-rose-600 transition-all shadow-sm"
+                                    >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
@@ -193,9 +257,20 @@ const PatientRecords = () => {
                                         {new Date(record.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     </span>
                                 </div>
-                                <button className="text-emerald-600 text-xs font-bold flex items-center gap-1 hover:underline">
-                                    View File <ChevronRight size={14} />
-                                </button>
+                                {record.fileUrl ? (
+                                    <a
+                                        href={(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/' + record.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-emerald-600 text-xs font-bold flex items-center gap-1 hover:underline"
+                                    >
+                                        View File <ChevronRight size={14} />
+                                    </a>
+                                ) : (
+                                    <span className="text-slate-300 text-xs font-bold flex items-center gap-1 cursor-not-allowed">
+                                        No File <X size={14} />
+                                    </span>
+                                )}
                             </div>
                         </motion.div>
                     ))
@@ -287,10 +362,18 @@ const PatientRecords = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">File Source</label>
-                                    <div className="h-11 px-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white hover:border-emerald-400 transition-all group/upload">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-emerald-500">Pick PDF (Reference)</span>
-                                        <Upload className="h-4 w-4 text-slate-300 group-hover:text-emerald-500 transition-all" />
-                                    </div>
+                                    <label className="h-11 px-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white hover:border-emerald-400 transition-all group/upload">
+                                        <span className={`text-[10px] font-bold ${selectedFile ? 'text-emerald-600' : 'text-slate-400'} uppercase tracking-widest group-hover:text-emerald-500 truncate max-w-[80%]`}>
+                                            {selectedFile ? selectedFile.name : 'Attach Any File (REQUIRED)'}
+                                        </span>
+                                        <Upload className={`h-4 w-4 ${selectedFile ? 'text-emerald-600' : 'text-slate-300'} group-hover:text-emerald-500 transition-all`} />
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            onChange={(e) => setSelectedFile(e.target.files[0])}
+                                            required
+                                        />
+                                    </label>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Description</label>
@@ -314,6 +397,92 @@ const PatientRecords = () => {
                             </form>
                         </motion.div>
                     </div>
+                )}
+
+                {isEditModalOpen && editingRecord && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
+                        >
+                            <div className="bg-emerald-600 px-8 py-6 text-white flex justify-between items-center">
+                                <div>
+                                    <h3 className="font-bold text-xl tracking-tight">Edit Record</h3>
+                                    <p className="text-emerald-100 text-xs mt-1">Update document details</p>
+                                </div>
+                                <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-white/20 rounded-xl transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleUpdate} className="p-8 space-y-6">
+                                <div className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Document Title</label>
+                                        <input
+                                            required
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 transition-all"
+                                            placeholder="e.g., Annual Health Checkup"
+                                            value={editingRecord.title}
+                                            onChange={(e) => setEditingRecord({ ...editingRecord, title: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Category</label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                                                    value={editingRecord.recordType}
+                                                    onChange={(e) => setEditingRecord({ ...editingRecord, recordType: e.target.value })}
+                                                >
+                                                    <option value="prescription">Prescription</option>
+                                                    <option value="report">Clinical Report</option>
+                                                    <option value="note">Medical Note</option>
+                                                    <option value="lab_result">Lab Results</option>
+                                                </select>
+                                                <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none rotate-90" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Description</label>
+                                        <textarea
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 transition-all h-24 resize-none"
+                                            placeholder="Provide context or key findings..."
+                                            value={editingRecord.description}
+                                            onChange={(e) => setEditingRecord({ ...editingRecord, description: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditModalOpen(false)}
+                                        className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-xs uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        className="flex-[2] py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
+                                    >
+                                        {submitting ? 'Saving Changes...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

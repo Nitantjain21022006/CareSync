@@ -3,6 +3,8 @@ import User from '../models/User.js';
 import AccessRequest from '../models/AccessRequest.js';
 import DoctorPatient from '../models/DoctorPatient.js';
 import PatientCreationRequest from '../models/PatientCreationRequest.js';
+import fs from 'fs';
+import path from 'path';
 
 // @desc    Upload/Create a medical record
 // @route   POST /api/records
@@ -20,13 +22,18 @@ export const createRecord = async (req, res) => {
                 return res.status(403).json({ success: false, error: 'Unauthorized: Patients can only upload for themselves.' });
             }
 
+            let finalFileUrl = fileUrl;
+            if (req.file) {
+                finalFileUrl = `uploads/${req.file.filename}`;
+            }
+
             const record = await MedicalRecord.create({
                 patient: req.user.id,
                 doctor: doctor, // Optional: Which doctor is this record for?
                 recordType,
                 title,
                 description,
-                fileUrl,
+                fileUrl: finalFileUrl,
                 accessibleBy: doctor ? [doctor] : [] // Automatically allow that doctor if specified
             });
             return res.status(201).json({ success: true, data: record });
@@ -49,13 +56,18 @@ export const createRecord = async (req, res) => {
                 return res.status(403).json({ success: false, error: 'Unauthorized: You are not authorized to upload for this patient.' });
             }
 
+            let finalFileUrl = fileUrl;
+            if (req.file) {
+                finalFileUrl = `uploads/${req.file.filename}`;
+            }
+
             const record = await MedicalRecord.create({
                 patient,
                 doctor: req.user.id,
                 recordType,
                 title,
                 description,
-                fileUrl,
+                fileUrl: finalFileUrl,
                 accessibleBy: [req.user.id] // Doctor who created it obviously has access
             });
             return res.status(201).json({ success: true, data: record });
@@ -140,6 +152,76 @@ export const getMyRecords = async (req, res) => {
         const records = await MedicalRecord.find({ patient: req.user.id }).populate('doctor', 'fullName');
         res.status(200).json({ success: true, count: records.length, data: records });
     } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Delete a medical record
+// @route   DELETE /api/records/:id
+// @access  Private (Patient/Authorized Doctor)
+export const deleteRecord = async (req, res) => {
+    try {
+        const record = await MedicalRecord.findById(req.params.id);
+
+        if (!record) {
+            return res.status(404).json({ success: false, error: 'Record not found' });
+        }
+
+        // Check ownership
+        // Only the patient who owns it or the doctor who created it can delete it
+        const isOwner = record.patient.toString() === req.user.id;
+        const isCreatorDoctor = record.doctor.toString() === req.user.id;
+
+        if (!isOwner && !isCreatorDoctor) {
+            return res.status(403).json({ success: false, error: 'Not authorized to delete this record' });
+        }
+
+        // Delete physical file if exists
+        if (record.fileUrl) {
+            const filePath = path.join(process.cwd(), record.fileUrl);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        await record.deleteOne();
+
+        res.status(200).json({ success: true, message: 'Record deleted successfully' });
+    } catch (err) {
+        console.error('Delete Record Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Update a medical record
+// @route   PUT /api/records/:id
+// @access  Private (Patient/Authorized Doctor)
+export const updateRecord = async (req, res) => {
+    try {
+        const { title, recordType, description } = req.body;
+        const record = await MedicalRecord.findById(req.params.id);
+
+        if (!record) {
+            return res.status(404).json({ success: false, error: 'Record not found' });
+        }
+
+        // Check ownership
+        const isOwner = record.patient.toString() === req.user.id;
+        const isCreatorDoctor = record.doctor.toString() === req.user.id;
+
+        if (!isOwner && !isCreatorDoctor) {
+            return res.status(403).json({ success: false, error: 'Not authorized to update this record' });
+        }
+
+        record.title = title || record.title;
+        record.recordType = recordType || record.recordType;
+        record.description = description || record.description;
+
+        await record.save();
+
+        res.status(200).json({ success: true, data: record });
+    } catch (err) {
+        console.error('Update Record Error:', err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };

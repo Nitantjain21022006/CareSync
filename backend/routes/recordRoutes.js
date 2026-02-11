@@ -11,15 +11,21 @@ import {
     getAuthorizedPatients,
     createPatientCreationRequest,
     getPendingCreationRequestsForPatient,
-    respondToCreationRequest
+    respondToCreationRequest,
+    deleteRecord,
+    updateRecord
 } from '../controllers/recordController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
+import upload from '../utils/upload.js';
+
 const router = express.Router();
 
-router.post('/', protect, createRecord);
-router.get('/patient/:patientId', protect, getPatientRecords);
+router.post('/', protect, upload.single('file'), createRecord);
 router.get('/patient/me', protect, authorize('patient'), getMyRecords);
+router.delete('/:id', protect, deleteRecord);
+router.put('/:id', protect, updateRecord);
+router.get('/patient/:patientId', protect, getPatientRecords);
 router.post('/access/request', protect, authorize('doctor'), createAccessRequest);
 router.get('/access/requests/pending', protect, authorize('doctor'), getPendingAccessRequests);
 router.post('/access/grant', protect, authorize('patient'), grantAccess);

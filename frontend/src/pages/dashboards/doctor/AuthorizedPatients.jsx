@@ -42,6 +42,7 @@ const AuthorizedPatients = () => {
         recordType: 'prescription'
     });
     const [submitting, setSubmitting] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     // Patient Creation Modal State
     const [isCreationModalOpen, setIsCreationModalOpen] = useState(false);
@@ -247,12 +248,30 @@ const AuthorizedPatients = () => {
                                             <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-1 max-w-xl">{record.description || 'Institutional medical documentation.'}</p>
                                         </div>
                                         <div className="flex gap-2 ml-6">
-                                            <button className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
-                                                <Download size={16} />
-                                            </button>
-                                            <button className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-slate-900 transition-all shadow-sm">
-                                                <ExternalLink size={16} />
-                                            </button>
+                                            {record.fileUrl ? (
+                                                <>
+                                                    <a
+                                                        href={(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/' + record.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 transition-all shadow-sm flex items-center justify-center"
+                                                    >
+                                                        <Download size={16} />
+                                                    </a>
+                                                    <a
+                                                        href={(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/' + record.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-slate-900 transition-all shadow-sm flex items-center justify-center"
+                                                    >
+                                                        <ExternalLink size={16} />
+                                                    </a>
+                                                </>
+                                            ) : (
+                                                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-200 cursor-not-allowed shadow-sm">
+                                                    <Lock size={16} />
+                                                </div>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}
@@ -405,19 +424,40 @@ const AuthorizedPatients = () => {
                                         onChange={(e) => setMedicationData({ ...medicationData, description: e.target.value })}
                                     />
                                 </div>
+                                <div className="space-y-2 text-left">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Attachment (Optional)</label>
+                                    <label className="w-full px-6 py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-between cursor-pointer hover:border-emerald-500 transition-all shadow-inner">
+                                        <span className={`text-xs font-bold ${selectedFile ? 'text-emerald-600' : 'text-slate-400'} truncate`}>
+                                            {selectedFile ? selectedFile.name : 'Attach Record/File...'}
+                                        </span>
+                                        <Upload size={16} className={selectedFile ? 'text-emerald-600' : 'text-slate-400'} />
+                                        <input type="file" className="hidden" onChange={(e) => setSelectedFile(e.target.files[0])} />
+                                    </label>
+                                </div>
                             </div>
 
                             <button
                                 onClick={async () => {
                                     setSubmitting(true);
                                     try {
-                                        await api.post('/records', {
-                                            ...medicationData,
-                                            patient: selectedPatient._id,
-                                            doctor: JSON.parse(localStorage.getItem('user'))?._id
+                                        const formData = new FormData();
+                                        formData.append('title', medicationData.title);
+                                        formData.append('description', medicationData.description);
+                                        formData.append('recordType', medicationData.recordType);
+                                        formData.append('patient', selectedPatient._id);
+                                        if (selectedFile) {
+                                            formData.append('file', selectedFile);
+                                        }
+
+                                        await api.post('/records', formData, {
+                                            headers: {
+                                                'Content-Type': 'multipart/form-data'
+                                            }
                                         });
+
                                         setIsUploadModalOpen(false);
                                         setMedicationData({ title: '', description: '', recordType: 'prescription' });
+                                        setSelectedFile(null);
                                         handleViewPatient(selectedPatient); // Refresh records
                                         alert('Prescription uploaded successfully');
                                     } catch (err) {

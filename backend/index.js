@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 // import xss from 'xss-clean'; // Removed: Incompatible with Express 5 getters
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
@@ -18,6 +20,9 @@ import redis from './config/redis.js';
 
 // Connect DBs
 connectDB();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -53,6 +58,9 @@ app.use(cookieParser());
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
+
+// Serve static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // XSS protection (REMOVED: xss-clean is incompatible with Express 5 req.query)
 // app.use(xss());

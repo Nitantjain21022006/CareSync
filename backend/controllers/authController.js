@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import AuthLog from '../models/AuthLog.js';
 import DoctorPatient from '../models/DoctorPatient.js';
+import fs from 'fs';
+import path from 'path';
 import { sendEmail } from '../utils/email.js';
 
 // Helper to set cookie
@@ -196,6 +198,40 @@ export const updateProfile = async (req, res, next) => {
 // @desc    Add a doctor (Patient)
 // @route   POST /api/auth/add-doctor
 // @access  Private (Patient)
+// @desc    Upload profile photo
+// @route   PUT /api/auth/profile-photo
+// @access  Private
+export const uploadProfilePhoto = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'Please upload a file' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Delete old photo if exists and is not the default
+        if (user.profilePhoto && fs.existsSync(user.profilePhoto)) {
+            // Optional: You might want to skip deleting if it's a shared default
+            // For now, let's just delete it to save space
+            // fs.unlinkSync(user.profilePhoto); 
+        }
+
+        user.profilePhoto = `uploads/${req.file.filename}`;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: user
+        });
+    } catch (err) {
+        console.error('Upload Profile Photo Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
 export const addDoctor = async (req, res, next) => {
     try {
         const { doctorId } = req.body;

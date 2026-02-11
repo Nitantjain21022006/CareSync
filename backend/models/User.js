@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     phone: String,
+    profilePhoto: {
+        type: String,
+        default: null
+    },
     metadata: {
         type: Object,
         default: {}

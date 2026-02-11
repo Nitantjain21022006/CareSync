@@ -27,7 +27,8 @@ import {
     Zap,
     Briefcase,
     Heart,
-    Trash2
+    Trash2,
+    ArrowUpRight
 } from 'lucide-react';
 
 const PatientProfile = () => {
@@ -36,6 +37,9 @@ const PatientProfile = () => {
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [recentRecords, setRecentRecords] = useState([]);
 
     const [patientData, setPatientData] = useState({
         profile: {
@@ -86,8 +90,13 @@ const PatientProfile = () => {
             if (userData) {
                 setPatientDataFromUser(userData);
             }
+            // Fetch recent records
+            const recordsRes = await api.get('/records/patient/me');
+            if (recordsRes.data.success) {
+                setRecentRecords(recordsRes.data.data.slice(0, 3));
+            }
         } catch (err) {
-            console.error('Error fetching profile');
+            console.error('Error fetching profile/records');
         } finally {
             setLoading(false);
         }
@@ -104,7 +113,7 @@ const PatientProfile = () => {
                 address: userData.metadata?.address || "",
                 emergencyContact: userData.metadata?.emergencyContact || "",
                 occupation: userData.metadata?.occupation || "",
-                profilePic: userData.metadata?.profilePic || null,
+                profilePic: userData.profilePhoto || null,
                 insuranceID: userData.metadata?.insuranceID || "",
                 bloodGroup: userData.metadata?.bloodGroup || ""
             },
@@ -137,6 +146,7 @@ const PatientProfile = () => {
     }, [user]);
 
     const handleSave = async () => {
+        setIsSaving(true);
         try {
             const updatePayload = {
                 fullName: patientData.profile.name,
@@ -154,9 +164,32 @@ const PatientProfile = () => {
             setUser(res.data.data);
             setIsGlobalEdit(false);
             alert('Profile updated successfully');
+            window.location.reload();
         } catch (err) {
             console.error('Failed to update profile', err);
-            alert('Failed to update profile');
+            alert(err.response?.data?.error || 'Failed to update profile');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        setUploadingPhoto(true);
+        try {
+            const res = await api.put('/auth/profile-photo', formData);
+            setUser(res.data.data);
+            alert('Profile photo updated successfully');
+        } catch (err) {
+            console.error('Photo upload failed', err);
+            alert(err.response?.data?.error || 'Photo upload failed. Ensure file is an image under 5MB.');
+        } finally {
+            setUploadingPhoto(false);
         }
     };
 
@@ -164,11 +197,6 @@ const PatientProfile = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [appointments, setAppointments] = useState([]);
     const [doctors, setDoctors] = useState([]);
-
-    useEffect(() => {
-        fetchAuthorizedDocs();
-        fetchAppointments();
-    }, []);
 
     const fetchAuthorizedDocs = async () => {
         try {
@@ -239,254 +267,264 @@ const PatientProfile = () => {
     };
 
     return (
-        <div className="space-y-10 pb-12">
-            {/* TOP ROW: Patient Details (Left) | Image Upload (Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="space-y-8 pb-12 max-w-7xl mx-auto">
+            {/* Header / Profile Identity Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="lg:col-span-8 bg-white rounded-[50px] p-12 shadow-xl border border-slate-50 relative overflow-hidden group"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="lg:col-span-8 bg-white rounded-2xl p-6 lg:p-10 shadow-sm border border-slate-200"
                 >
-                    <div className="relative z-10 space-y-6">
-                        <div className="flex justify-between items-start">
+                    <div className="space-y-8">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
                             <div className="space-y-4 w-full">
-                                <div className="flex items-center gap-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     {isGlobalEdit ? (
                                         <input
-                                            className="text-4xl lg:text-6xl font-black text-slate-900 bg-slate-50 rounded-[25px] px-8 py-5 outline-none border-b-4 border-emerald-500 flex-1 shadow-inner h-24"
+                                            className="text-2xl lg:text-3xl font-bold text-slate-900 bg-slate-50 rounded-xl px-4 py-3 outline-none border-b-2 border-emerald-500 flex-1 shadow-inner placeholder:text-slate-300"
                                             value={patientData.profile.name}
                                             onChange={(e) => updateField('profile', 'name', e.target.value)}
+                                            placeholder="Enter Full Name"
                                         />
                                     ) : (
-                                        <h1 className="text-4xl lg:text-7xl font-black text-slate-900 tracking-tighter">{patientData.profile.name}</h1>
+                                        <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">{patientData.profile.name || "Set Name"}</h1>
                                     )}
-                                    <button
-                                        onClick={() => {
-                                            if (isGlobalEdit) {
-                                                handleSave();
-                                            } else {
-                                                setIsGlobalEdit(true);
-                                            }
-                                        }}
-                                        className="p-4 bg-slate-900 text-white rounded-2xl hover:scale-110 transition-all shadow-xl flex-shrink-0"
-                                    >
-                                        {isGlobalEdit ? <Save size={24} /> : <Settings size={24} />}
-                                    </button>
+
+                                    <div className="flex gap-2">
+                                        {isGlobalEdit ? (
+                                            <>
+                                                <button
+                                                    onClick={handleSave}
+                                                    disabled={isSaving}
+                                                    className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-md flex items-center gap-2 font-bold text-xs disabled:opacity-50"
+                                                >
+                                                    {isSaving ? <Activity size={14} className="animate-spin" /> : <Save size={14} />}
+                                                    <span>Save Profile</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsGlobalEdit(false);
+                                                        fetchProfile();
+                                                    }}
+                                                    className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-bold text-xs"
+                                                >
+                                                    Discard
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                onClick={() => setIsGlobalEdit(true)}
+                                                className="px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-black transition-all shadow-md flex items-center gap-2 font-bold text-xs"
+                                            >
+                                                <Edit2 size={14} />
+                                                Edit Profile
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <span className="px-4 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-widest rounded-full">Patient Profile Registry</span>
-                                    <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Insurance ID: {patientData.profile.insuranceID}</span>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-emerald-100">Verified Patient Entity</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Insurace ID: {patientData.profile.insuranceID || 'Pending Validation'}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-12 pt-10 border-t border-slate-50">
-                            <DetailInput label="Age / Gender" value={(patientData.profile.age || patientData.profile.gender) ? `${patientData.profile.age} / ${patientData.profile.gender}` : "PENDING_IDENTITY"} isEdit={isGlobalEdit} onUpdate={(v) => {
-                                const [age, gender] = v.split('/').map(s => s.trim());
-                                updateField('profile', 'age', age);
-                                updateField('profile', 'gender', gender);
-                            }} icon={User} />
-                            <DetailInput label="Primary Contact" value={patientData.profile.phone || "UNLINKED_TERMINAL"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'phone', v)} icon={Phone} />
-                            <DetailInput label="EMAIL ACCESS" value={patientData.profile.email || "NO_TARGET_ADDRESS"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'email', v)} icon={Zap} />
-                            <DetailInput label="Home Address" value={patientData.profile.address || "LOCATION_ISOLATED"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'address', v)} icon={MapPin} />
-                            <DetailInput label="Professional Role" value={patientData.profile.occupation || "ROLE_UNASSIGNED"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'occupation', v)} icon={Briefcase} />
-                            <DetailInput label="Emergency Alert" value={patientData.profile.emergencyContact || "NO_FAILSAFE_CONTACT"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'emergencyContact', v)} icon={AlertCircle} color="rose" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-8 border-t border-slate-100">
+                            <DetailInput label="Patient Age" value={patientData.profile.age || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'age', v)} icon={User} />
+                            <DetailInput label="Gender Identity" value={patientData.profile.gender || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'gender', v)} icon={User} />
+                            <DetailInput label="Phone Number" value={patientData.profile.phone || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'phone', v)} icon={Phone} />
+                            <DetailInput label="Email Access" value={patientData.profile.email || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'email', v)} icon={Zap} />
+                            <DetailInput label="Home Address" value={patientData.profile.address || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'address', v)} icon={MapPin} />
+                            <DetailInput label="Professional Role" value={patientData.profile.occupation || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'occupation', v)} icon={Briefcase} />
+                            <DetailInput label="Emergency Contact" value={patientData.profile.emergencyContact || "Not Set"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'emergencyContact', v)} icon={AlertCircle} color="rose" />
                         </div>
                     </div>
                 </motion.div>
 
                 <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="lg:col-span-4 bg-slate-50 rounded-[50px] p-12 shadow-inner border border-slate-100 flex flex-col items-center justify-center gap-10 relative group"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="lg:col-span-4 bg-slate-50 rounded-2xl p-8 border border-slate-200 flex flex-col items-center justify-center gap-6"
                 >
                     <div className="relative">
-                        <div className="w-48 h-48 lg:w-56 lg:h-56 rounded-[50px] bg-white border-4 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shadow-xl transform -rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                            <User className="w-24 h-24 text-slate-100" />
+                        <div className="w-40 h-40 lg:w-48 lg:h-48 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm relative">
+                            {user?.profilePhoto ? (
+                                <img
+                                    src={(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/' + user.profilePhoto}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center text-slate-300">
+                                    <User className="w-16 h-16" />
+                                    <span className="text-[10px] font-bold mt-2 uppercase tracking-tighter">No Identity Image</span>
+                                </div>
+                            )}
+                            {uploadingPhoto && (
+                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                    <Activity className="animate-spin text-emerald-600" />
+                                </div>
+                            )}
                         </div>
-                        <label className="absolute -bottom-4 -right-4 p-6 bg-slate-900 text-white rounded-[25px] shadow-2xl hover:bg-black cursor-pointer hover:scale-110 transition-all active:scale-95">
-                            <Upload size={32} />
-                            <input type="file" className="hidden" />
+                        <label className="absolute -bottom-3 -right-3 p-3 bg-emerald-600 text-white rounded-xl shadow-lg hover:bg-emerald-700 cursor-pointer transition-all active:scale-95 border-2 border-white">
+                            <Upload size={18} />
+                            <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
                         </label>
                     </div>
                     <div className="text-center">
-                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em]">Biometric Portrait</p>
-                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] mt-3">Verified Clinical ID</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medical Portrait</p>
+                        <p className="text-sm font-bold text-emerald-600 mt-1">Verified Clinical Identity</p>
                     </div>
                 </motion.div>
             </div>
 
-            {/* MIDDLE ROW: Medical Data (Full Width Grid) */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-            >
-                <div className="flex items-center justify-between px-6">
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter flex items-center gap-6">
-                        <Clipboard className="text-emerald-500" size={40} />
-                        CLINICAL DOSSIER
-                    </h2>
-                    <div className="flex gap-8">
-                        <VitalTab value={patientData.medical.bp ? "98%" : "N/A"} label="HEALTH INDEX" color="emerald" />
-                        <VitalTab value={patientData.medical.bp ? "STABLE" : "INIT"} label="SYSTEM STATE" color="emerald" />
-                    </div>
-                </div>
+            {/* Medical Metrics Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <MetricCard label="Blood Pressure" value={patientData.medical.bp || "N/A"} icon={Activity} color="emerald" isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'bp', v)} />
+                <MetricCard label="Allergy Status" value={patientData.medical.allergies || "None"} icon={AlertCircle} color="rose" isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'allergies', v)} />
+                <MetricCard label="Blood Group" value={patientData.profile.bloodGroup || "Pending"} icon={Droplets} color="emerald" isEdit={isGlobalEdit} onUpdate={(v) => updateField('profile', 'bloodGroup', v)} />
+                <MetricCard label="Current Weight" value={patientData.medical.weight || "N/A"} icon={ScaleIcon} color="amber" isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'weight', v)} />
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <BioCard label="Current Prescriptions" value={patientData.medical.medication || "NO_ACTIVE_SCRIPTS"} icon={Activity} color="emerald" isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'medication', v)} />
-                    <BioCard label="Immunological Factors" value={patientData.medical.allergies || "CLEAR_STATUS"} icon={AlertCircle} color="rose" isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'allergies', v)} />
-                    <BioCard label="BP & BLOOD SYSTEM" value={(patientData.medical.bp || patientData.profile.bloodGroup) ? `${patientData.medical.bp} | ${patientData.profile.bloodGroup}` : "UNSTABLE_VALUES"} icon={Droplets} color="emerald" isEdit={isGlobalEdit} onUpdate={(v) => {
-                        const [bp, bg] = v.split('|').map(s => s.trim());
-                        updateField('medical', 'bp', bp);
-                        updateField('profile', 'bloodGroup', bg);
-                    }} />
-                    <BioCard label="Physique Metrics" value={(patientData.medical.height || patientData.medical.weight) ? `${patientData.medical.height} | ${patientData.medical.weight}` : "METRICS_PENDING"} icon={Zap} color="amber" isEdit={isGlobalEdit} onUpdate={(v) => {
-                        const [h, w] = v.split('|').map(s => s.trim());
-                        updateField('medical', 'height', h);
-                        updateField('medical', 'weight', w);
-                    }} />
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Recent Records Section */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="lg:col-span-8 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Recent Medical Documents</h2>
+                        <Link to="/dashboard/patient/records" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                            Browse All Records <ChevronRight size={14} />
+                        </Link>
+                    </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="lg:col-span-4 bg-white rounded-[50px] p-10 shadow-xl border border-slate-50 space-y-10 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-40" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 border-l-4 border-emerald-500 pl-4 relative z-10">LIFESTYLE PARAMETERS</h3>
-                        <div className="space-y-8 relative z-10">
-                            <HabitItem label="Smoking Status" value={patientData.medical.lifestyle.smoking} icon={Zap} isEdit={isGlobalEdit} onUpdate={(v) => updateLifestyle('smoking', v)} />
-                            <HabitItem label="Alcohol Intake" value={patientData.medical.lifestyle.alcohol} icon={LifeBuoy} isEdit={isGlobalEdit} onUpdate={(v) => updateLifestyle('alcohol', v)} />
-                            <HabitItem label="Nutrition Plan" value={patientData.medical.lifestyle.diet} icon={Pizza} isEdit={isGlobalEdit} onUpdate={(v) => updateLifestyle('diet', v)} />
-                            <HabitItem label="Circadian Cycle" value={patientData.medical.lifestyle.sleep} icon={Clock} isEdit={isGlobalEdit} onUpdate={(v) => updateLifestyle('sleep', v)} />
-                        </div>
-                    </div>
-                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                        <TextSection label="SURGICAL TIMELINE" value={patientData.medical.pastSurgeries || "NO_RECORDED_HISTORY"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'pastSurgeries', v)} color="slate" />
-                        <TextSection label="GENETIC ANCESTRY" value={patientData.medical.familyHistory || "NO_GENETIC_MARKERS"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'familyHistory', v)} color="emerald" />
-                        <TextSection label="IMMUNIZATION TIMELINE" value={patientData.medical.immunization || "VACCINATION_PENDING"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'immunization', v)} color="emerald" />
-                        <TextSection label="SYMPTOM OBSERVATIONS" value={patientData.medical.symptoms || "NO_ACTIVE_SYMPTOMS"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'symptoms', v)} color="amber" />
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* BOTTOM ROW: Doctor (Left) | Calendar (Bottom Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="lg:col-span-8 space-y-8"
-                >
-                    <div className="flex justify-between items-center px-6">
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase border-l-8 border-emerald-500 pl-8">RESOURCE_DIR</h2>
-                        <button className="p-5 bg-slate-900 text-white rounded-[20px] hover:rotate-6 transition-all shadow-3xl">
-                            <Plus size={28} />
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-10">
-                        {doctors.map(doc => (
-                            <DoctorFolderCard key={doc._id} doc={doc} />
-                        ))}
-                        {doctors.length === 0 && (
-                            <div className="col-span-4 py-12 text-center bg-slate-50/50 rounded-[40px] border border-dashed border-slate-200">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Authorized Practitioners Found</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {loading ? (
+                            [1, 2, 3].map(i => <div key={i} className="h-32 bg-slate-50 rounded-2xl animate-pulse border border-slate-100" />)
+                        ) : recentRecords.length > 0 ? (
+                            recentRecords.map(record => (
+                                <div key={record._id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                                            <FileText size={16} />
+                                        </div>
+                                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">{record.recordType}</span>
+                                    </div>
+                                    <h4 className="font-bold text-slate-900 text-sm truncate group-hover:text-emerald-600 transition-colors">{record.title}</h4>
+                                    <p className="text-[10px] text-slate-400 mt-1">{new Date(record.createdAt).toLocaleDateString()}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-full py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center flex flex-col items-center">
+                                <FileText size={24} className="text-slate-300 mb-2" />
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Recent Activity Discovered</p>
                             </div>
                         )}
                     </div>
-                </motion.section>
 
-                <motion.aside
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="lg:col-span-4 bg-slate-50 rounded-[50px] p-10 lg:p-12 shadow-inner border border-slate-200 relative overflow-hidden group"
-                >
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-white rounded-full blur-[60px] -mr-24 -mt-24 opacity-60 group-hover:scale-125 transition-transform duration-1000" />
-                    <div className="relative z-10 space-y-10">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-2xl font-black text-slate-800 tracking-tighter">PLANNING UNIT</h3>
-                            <div className="flex gap-4">
-                                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} className="p-3 bg-white shadow-sm hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 rounded-xl transition-all"><ChevronLeft size={20} /></button>
-                                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} className="p-3 bg-white shadow-sm hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 rounded-xl transition-all"><ChevronRight size={20} /></button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <BioTextSection label="Surgical History" value={patientData.medical.pastSurgeries || "None"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'pastSurgeries', v)} icon={Clipboard} />
+                        <BioTextSection label="Family Medical History" value={patientData.medical.familyHistory || "None"} isEdit={isGlobalEdit} onUpdate={(v) => updateField('medical', 'familyHistory', v)} icon={Heart} />
+                    </div>
+                </motion.div>
+
+                {/* Calendar / Appointments Sidebar */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="lg:col-span-4 space-y-6">
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-slate-900 text-lg tracking-tight">Clinical Calendar</h3>
+                            <div className="flex gap-1">
+                                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400"><ChevronLeft size={16} /></button>
+                                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400"><ChevronRight size={16} /></button>
                             </div>
                         </div>
-                        <div className="space-y-8">
-                            <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-500 pb-4 border-b border-slate-200">
-                                <span className="text-slate-900 font-black">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
-                                <span className="text-emerald-600 font-black">OPERATIONAL</span>
+
+                        <div className="space-y-4">
+                            <div className="text-center font-bold text-xs text-slate-900 underline decoration-emerald-500 decoration-2 underline-offset-4 uppercase tracking-widest mb-4">
+                                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                             </div>
-                            <div className="grid grid-cols-7 gap-y-3 gap-x-1 text-center">
-                                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="text-[10px] font-black text-slate-300 pb-2">{d}</div>)}
+                            <div className="grid grid-cols-7 gap-1 text-center">
+                                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => <div key={`${d}-${idx}`} className="text-[9px] font-bold text-slate-300 py-1 uppercase">{d}</div>)}
                                 {calendarDays.map((d, i) => (
                                     <div
                                         key={i}
                                         onClick={() => handleDateClick(d)}
-                                        className={`aspect-square flex items-center justify-center text-[11px] rounded-xl cursor-pointer transition-all relative group/day
-                      ${!d.currentMonth ? 'opacity-0 pointer-events-none' : 'hover:bg-white hover:shadow-sm text-slate-600'}
-                      ${d.hasApt ? 'text-slate-900 font-black' : 'font-bold'}
-                      ${d.dateStr === new Date().toISOString().split('T')[0] ? 'bg-slate-200/50 text-slate-900' : ''}
-                    `}
+                                        className={`aspect-square flex items-center justify-center text-[10px] rounded-lg cursor-pointer transition-all relative
+                                            ${!d.currentMonth ? 'opacity-0' : 'hover:bg-emerald-50 text-slate-600'}
+                                            ${d.hasApt ? 'bg-emerald-600 text-white font-bold' : ''}
+                                            ${d.dateStr === new Date().toISOString().split('T')[0] ? 'border border-emerald-500' : ''}
+                                        `}
                                     >
-                                        <span className="relative z-10">{d.day}</span>
-                                        {d.hasApt && (
-                                            <motion.div
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                className="absolute inset-1 border-2 border-emerald-500 rounded-lg z-0"
-                                            />
-                                        )}
-                                        {d.hasApt && (
-                                            <div className="absolute -top-1 -right-1 bg-rose-500 w-4 h-4 rounded-full border border-white flex items-center justify-center opacity-0 group-hover/day:opacity-100 transition-opacity z-20">
-                                                <X size={8} className="text-white" />
-                                            </div>
-                                        )}
+                                        {d.day}
                                     </div>
                                 ))}
                             </div>
                         </div>
+
                         <button
                             onClick={() => setIsAppointmentModalOpen(true)}
-                            className="w-full py-6 bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] rounded-3xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3"
+                            className="w-full mt-6 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2"
                         >
-                            REQUEST CONSULTATION
-                            <ChevronRight size={20} />
+                            Request Scheduling <ArrowUpRight size={14} />
                         </button>
                     </div>
-                </motion.aside>
+
+                    <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-lg">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <Zap size={16} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-sm tracking-tight">Active Practitioners</h4>
+                                <p className="text-[10px] text-emerald-100">Authorized medical access</p>
+                            </div>
+                        </div>
+                        <div className="flex -space-x-3 overflow-hidden mb-6">
+                            {doctors.map(doc => (
+                                <div key={doc._id} className="inline-block h-8 w-8 rounded-full ring-2 ring-emerald-600 bg-slate-100 flex items-center justify-center text-xs font-bold text-emerald-600 border border-emerald-500">
+                                    {doc.fullName?.charAt(0) || 'D'}
+                                </div>
+                            ))}
+                            {doctors.length === 0 && <span className="text-[10px] text-emerald-100 italic">No specialists linked yet</span>}
+                        </div>
+                        <Link to="/dashboard/patient/doctors" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:translate-x-1 transition-transform">
+                            Manage Permissions <ChevronRight size={12} />
+                        </Link>
+                    </div>
+                </motion.div>
             </div>
 
             {/* Appointment Modal */}
             <AnimatePresence>
                 {isAppointmentModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAppointmentModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-lg" />
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAppointmentModalOpen(false)} className="absolute inset-0" />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                            className="relative bg-white w-full max-w-md rounded-[50px] p-12 shadow-4xl space-y-10 border border-slate-100"
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="relative bg-white w-full max-w-sm rounded-2xl p-8 shadow-2xl space-y-6 border border-slate-200"
                         >
-                            <div className="space-y-4">
-                                <h3 className="text-4xl font-black tracking-tighter">Clinical Entry</h3>
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Registering for {selectedDate}</p>
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900">Request Appointment</h3>
+                                <p className="text-xs text-slate-400 mt-1">Proposed Clinical Date: {selectedDate}</p>
                             </div>
-                            <div className="space-y-8">
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black uppercase text-slate-400 ml-1">Assigned Specialist</label>
-                                    <select className="w-full p-6 bg-slate-50 border-2 border-transparent focus:border-emerald-500 rounded-3xl text-sm font-black appearance-none outline-none shadow-inner">
-                                        {doctors.map(d => <option key={d.id}>{d.name}</option>)}
+
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Select Practitioner</label>
+                                    <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-emerald-500 appearance-none">
+                                        {doctors.map(d => <option key={d._id} value={d._id}>{d.fullName}</option>)}
+                                        {doctors.length === 0 && <option>No Doctors Available</option>}
                                     </select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">Preferred Slot</label>
-                                        <input type="time" className="w-full p-6 bg-slate-50 border-2 border-transparent focus:border-emerald-500 rounded-3xl text-sm font-black outline-none shadow-inner" />
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Preferred Protocol</label>
+                                    <input type="time" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-emerald-500" />
                                 </div>
                             </div>
+
                             <button
-                                onClick={() => {
-                                    setAppointments([...appointments, { id: Date.now(), date: selectedDate, time: "TBD", doctor: "Pending", type: "General", icon: "🏥" }]);
-                                    setIsAppointmentModalOpen(false);
-                                }}
-                                className="w-full py-7 bg-emerald-600 text-white font-black rounded-[30px] shadow-2xl text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all border-b-4 border-emerald-800"
+                                onClick={() => setIsAppointmentModalOpen(false)}
+                                className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md"
                             >
-                                DEPLOY APPOINTMENT
+                                Submit Request
                             </button>
                         </motion.div>
                     </div>
@@ -499,93 +537,67 @@ const PatientProfile = () => {
 // --- Sub Components ---
 
 const DetailInput = ({ label, value, isEdit, onUpdate, icon: Icon, color = "emerald" }) => (
-    <div className="space-y-2">
-        <div className="flex items-center gap-2 px-1">
-            <Icon size={16} className={`text-${color}-600`} />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{label}</span>
-        </div>
+    <div className="space-y-1.5">
+        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+            <Icon size={12} className={color === 'rose' ? 'text-rose-500' : 'text-emerald-600'} />
+            {label}
+        </label>
         {isEdit ? (
-            <input className="w-full p-3 bg-emerald-50 rounded-2xl text-sm font-black text-slate-900 outline-none border-b-2 border-emerald-500 shadow-sm" value={value} onChange={(e) => onUpdate(e.target.value)} />
+            <input
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-sm"
+                value={value}
+                onChange={(e) => onUpdate(e.target.value)}
+            />
         ) : (
-            <div className="w-full p-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-800 truncate border border-transparent hover:border-slate-100 transition-all">{value}</div>
+            <div className="text-sm font-bold text-slate-900 py-1 px-1 truncate">{value}</div>
         )}
     </div>
 );
 
-const BioCard = ({ label, value, icon: Icon, color, isEdit, onUpdate }) => {
+const MetricCard = ({ label, value, icon: Icon, color, isEdit, onUpdate }) => {
     const styles = {
-        emerald: "bg-emerald-50 text-emerald-600 border-emerald-200",
-        rose: "bg-rose-50 text-rose-600 border-rose-200",
-        amber: "bg-amber-50 text-amber-600 border-amber-200"
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        rose: "bg-rose-50 text-rose-600 border-rose-100",
+        amber: "bg-amber-50 text-amber-600 border-amber-100"
     };
     return (
-        <div className={`p-6 rounded-[35px] bg-white shadow-lg flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group border border-slate-50`}>
-            <div className={`w-16 h-16 rounded-2xl ${styles[color]} border-2 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm`}>
-                <Icon size={28} />
+        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col items-center">
+            <div className={`p-3 rounded-xl mb-3 ${styles[color]}`}>
+                <Icon size={20} />
             </div>
-            <div className="space-y-2 w-full">
-                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{label}</p>
-                {isEdit ? (
-                    <textarea className="w-full text-center text-sm font-black bg-slate-50 p-2 rounded-xl border-b-2 border-emerald-500 resize-none outline-none h-16" value={value} onChange={(e) => onUpdate(e.target.value)} />
-                ) : (
-                    <p className="text-base font-black text-slate-900 leading-tight h-8 flex items-center justify-center">{value}</p>
-                )}
-            </div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+            {isEdit ? (
+                <input
+                    className="w-full mt-2 px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-center text-slate-900 focus:border-emerald-500 outline-none"
+                    value={value === "N/A" || value === "None" || value === "Pending" ? "" : value}
+                    onChange={(e) => onUpdate(e.target.value)}
+                    placeholder="Enter value..."
+                />
+            ) : (
+                <p className="text-xl font-bold text-slate-900 mt-1">{value}</p>
+            )}
         </div>
     );
 };
 
-const HabitItem = ({ label, value, icon: Icon, isEdit, onUpdate }) => (
-    <div className="flex items-center gap-5 group">
-        <div className="w-12 h-12 rounded-xl bg-white border-2 border-slate-100 text-slate-500 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm">
-            <Icon size={20} />
+const BioTextSection = ({ label, value, isEdit, onUpdate, icon: Icon }) => (
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center gap-2">
+            <Icon size={16} className="text-emerald-600" />
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">{label}</h3>
         </div>
-        <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{label}</p>
-            {isEdit ? (
-                <input className="w-full text-sm font-bold bg-transparent border-b-2 border-slate-100 focus:border-emerald-500 outline-none transition-all py-1.5" value={value} onChange={(e) => onUpdate(e.target.value)} />
-            ) : (
-                <p className="text-base font-bold text-slate-800 truncate">{value}</p>
-            )}
-        </div>
-    </div>
-);
-
-const TextSection = ({ label, value, isEdit, onUpdate, color }) => (
-    <div className="bg-white p-8 rounded-[35px] shadow-lg border border-slate-50 space-y-4">
-        <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 border-b-2 border-slate-50 pb-3`}>{label}</h3>
         {isEdit ? (
-            <textarea className="w-full h-28 bg-slate-50 p-4 rounded-2xl text-sm font-bold resize-none outline-none border-2 border-transparent focus:border-emerald-500 shadow-inner" value={value} onChange={(e) => onUpdate(e.target.value)} />
+            <textarea
+                className="w-full h-24 bg-slate-50 p-3 rounded-xl text-sm font-bold resize-none outline-none border border-slate-200 focus:border-emerald-500"
+                value={value}
+                onChange={(e) => onUpdate(e.target.value)}
+            />
         ) : (
-            <p className="text-sm font-bold text-slate-700 leading-relaxed bg-slate-50/50 p-6 rounded-[25px] min-h-[90px]">{value}</p>
+            <p className="text-sm font-medium text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl min-h-[80px]">{value}</p>
         )}
     </div>
 );
 
-const VitalTab = ({ label, value, color }) => (
-    <div className={`px-8 py-4 rounded-2xl bg-${color}-50 border border-${color}-100 flex flex-col items-center justify-center shadow-sm min-w-[140px]`}>
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{label}</span>
-        <span className={`text-3xl font-black text-slate-900 tracking-tighter`}>{value}</span>
-    </div>
-);
-
-const DoctorFolderCard = ({ doc }) => (
-    <Link to={`/dashboard/patient/doctors?doctorId=${doc._id}`} className="block">
-        <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center gap-4 cursor-pointer group">
-            <div className="w-full aspect-[4/3] relative">
-                <div className="absolute inset-0 bg-[#FFD966] rounded-2xl border-2 border-slate-200 shadow-sm">
-                    <div className="w-1/2 h-4 bg-[#FFD966] rounded-t-[12px] -mt-3.5 ml-4 border-t-2 border-x-2 border-slate-200" />
-                </div>
-                <div className="absolute inset-x-0 bottom-0 top-3 bg-[#FFE599] rounded-[20px] shadow-lg border-t-2 border-white/40 transform origin-bottom group-hover:rotate-x-12 transition-transform duration-500 flex flex-col items-center justify-center p-4">
-                    <div className="text-4xl drop-shadow-md group-hover:scale-110 transition-transform">👨‍⚕️</div>
-                </div>
-            </div>
-            <div className="text-center w-full px-2">
-                <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tighter">Dr. {(doc.fullName || 'Specialist').replace('Dr. ', '').split(' ')[0]}</p>
-                <p className="text-[9px] font-bold text-emerald-700 opacity-60 uppercase tracking-widest truncate">{doc.metadata?.specialization || doc.metadata?.specialty || 'Medical Specialist'}</p>
-            </div>
-        </motion.div>
-    </Link>
-);
+const ScaleIcon = ({ size }) => <Activity size={size} />; // Placeholder for Scale icon
 
 export default PatientProfile;

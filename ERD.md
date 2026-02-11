@@ -14,7 +14,7 @@ erDiagram
     USER {
         string _id PK
         string email
-        string password
+        string password 
         string fullName
         string role "patient | doctor | hospital_staff | admin"
         string phone

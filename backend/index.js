@@ -16,6 +16,7 @@ import recordRoutes from './routes/recordRoutes.js';
 import billingRoutes from './routes/billingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import mlRoutes from './routes/mlRoutes.js';
+import consultationRoutes from './routes/consultation.js';
 import redis from './config/redis.js';
 
 // Connect DBs
@@ -108,6 +109,7 @@ app.use('/api/records', recordRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ml', mlRoutes);
+app.use('/api/consultation', consultationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

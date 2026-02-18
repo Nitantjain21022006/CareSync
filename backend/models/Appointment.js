@@ -29,7 +29,23 @@ const appointmentSchema = new mongoose.Schema({
     mlPrediction: {
         noShowProbability: Number,
         predictionDate: Date
-    }
+    },
+    // Consultation Fields
+    consultationId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    sessionToken: String,
+    roomName: String,
+    consultationStatus: {
+        type: String,
+        enum: ['pending', 'in-progress', 'completed', 'missed'],
+        default: 'pending'
+    },
+    duration: Number, // in minutes
+    prescriptionUrl: String,
+    consultationNotes: String
 }, {
     timestamps: true
 });

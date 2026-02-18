@@ -8,7 +8,9 @@ import {
     ChevronRight,
     Search,
     Filter,
-    MoreVertical
+    MoreVertical,
+    Video,
+    Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../config/api';
@@ -187,12 +189,26 @@ const DoctorAppointments = () => {
                                             </button>
                                         </>
                                     ) : (
-                                        <button
-                                            onClick={() => window.location.href = `/dashboard/doctor/patients?patientId=${appt.patient?._id}`}
-                                            className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md flex items-center justify-center gap-2 group/btn"
-                                        >
-                                            Open Clinical Suite <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-all" />
-                                        </button>
+                                        <div className="flex flex-col w-full gap-2">
+                                            <button
+                                                onClick={() => window.location.href = `/consultation/voice/${appt._id}`}
+                                                className="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2 group/btn"
+                                            >
+                                                <Phone size={14} /> Start Voice Call
+                                            </button>
+                                            <button
+                                                onClick={() => window.location.href = `/consultation/video/${appt._id}`}
+                                                className="w-full px-4 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md flex items-center justify-center gap-2 group/btn"
+                                            >
+                                                <Video size={14} /> Start Video Call
+                                            </button>
+                                            <button
+                                                onClick={() => window.location.href = `/dashboard/doctor/patients?patientId=${appt.patient?._id}`}
+                                                className="w-full px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group/btn"
+                                            >
+                                                Clinical Suite <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-all" />
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </motion.div>

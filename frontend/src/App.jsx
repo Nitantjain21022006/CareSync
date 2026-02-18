@@ -10,6 +10,9 @@ import StaffDashboard from './pages/dashboards/staff/StaffDashboard';
 import AdminDashboard from './pages/dashboards/admin/AdminDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import VoiceCall from './pages/VoiceCall';
+import VideoCall from './pages/VideoCall';
+import ConsultationSummary from './pages/ConsultationSummary';
 
 const Unauthorized = () => {
   const { logout, user } = useAuth();
@@ -81,6 +84,13 @@ function AppRoutes() {
       {/* Doctor Routes */}
       <Route element={<ProtectedRoute allowedRoles={['doctor']} />}>
         <Route path="/dashboard/doctor/*" element={<DoctorDashboard />} />
+        <Route path="/consultation/summary/:appointmentId" element={<ConsultationSummary />} />
+      </Route>
+
+      {/* Shared Consultation Routes (Doctor + Patient) */}
+      <Route element={<ProtectedRoute allowedRoles={['doctor', 'patient']} />}>
+        <Route path="/consultation/voice/:appointmentId" element={<VoiceCall />} />
+        <Route path="/consultation/video/:appointmentId" element={<VideoCall />} />
       </Route>
 
       {/* Staff Routes */}

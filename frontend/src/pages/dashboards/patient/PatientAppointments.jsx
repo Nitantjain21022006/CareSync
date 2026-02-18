@@ -8,7 +8,8 @@ import {
     Video,
     ArrowRight,
     Edit2,
-    ArrowUpRight
+    ArrowUpRight,
+    Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -119,12 +120,31 @@ const PatientAppointments = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 w-full md:w-auto">
-                                        <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
-                                            <MoreHorizontal className="h-5 w-5" />
-                                        </button>
+                                    <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                                        {appt.status === 'confirmed' ? (
+                                            <>
+                                                <button
+                                                    onClick={() => window.location.href = `/consultation/voice/${appt._id}`}
+                                                    className="flex-1 md:flex-none p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100"
+                                                    title="Voice Call"
+                                                >
+                                                    <Phone size={20} />
+                                                </button>
+                                                <button
+                                                    onClick={() => window.location.href = `/consultation/video/${appt._id}`}
+                                                    className="flex-1 md:flex-none p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100"
+                                                    title="Video Call"
+                                                >
+                                                    <Video size={20} />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
+                                                <MoreHorizontal className="h-5 w-5" />
+                                            </button>
+                                        )}
                                         <button className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md">
-                                            Join Session
+                                            {appt.status === 'confirmed' ? 'Join Session' : 'Details'}
                                         </button>
                                     </div>
                                 </motion.div>

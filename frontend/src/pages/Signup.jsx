@@ -41,6 +41,8 @@ const Signup = () => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [otp, setOtp] = useState('');
+    const [otpLoading, setOtpLoading] = useState(false);
 
     const handleRoleSelect = (roleId) => {
         if (selectedRole !== roleId) {
@@ -67,6 +69,29 @@ const Signup = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleRequestOTP = async (e) => {
+        e.preventDefault();
+        setOtpLoading(true);
+        setError(null);
+        try {
+            await api.post('/auth/request-signup-otp', { email: formData.email });
+            setStep(3); // Go to OTP step
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to send OTP');
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    const handleVerifyOTP = (e) => {
+        e.preventDefault();
+        if (otp.length === 6) {
+            setStep(4); // Go to role details
+        } else {
+            setError("Please enter a valid 6-digit OTP");
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -82,10 +107,11 @@ const Signup = () => {
                 fullName: formData.fullName,
                 phone: formData.phone,
                 role: selectedRole,
-                metadata: { ...metadata }
+                metadata: { ...metadata },
+                otp // Pass OTP to register
             });
 
-            setStep(4); // Success step
+            setStep(5); // Success step
         } catch (err) {
             setError(err.message);
         } finally {
@@ -123,9 +149,9 @@ const Signup = () => {
             case 2:
                 const isStep2Valid = formData.fullName && formData.email && formData.phone && formData.password;
                 return (
-                    <div className="space-y-3.5">
+                    <form onSubmit={handleRequestOTP} className="space-y-3.5">
                         <div className="flex items-center gap-3">
-                            <button onClick={prevStep} className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
+                            <button type="button" onClick={prevStep} className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
                                 <ArrowLeft className="w-3.5 h-3.5 text-gray-600" />
                             </button>
                             <div>
@@ -215,17 +241,63 @@ const Signup = () => {
                                 />
                             </div>
                         </div>
+                        {error && <p className="text-red-500 text-[9px] font-bold text-center bg-red-50 py-1.5 rounded-lg border border-red-100">{error}</p>}
                         <button
-                            onClick={nextStep}
-                            disabled={!isStep2Valid}
+                            type="submit"
+                            disabled={!isStep2Valid || otpLoading}
                             className="w-full py-3.5 bg-emerald-600 text-white font-black rounded-lg shadow-lg shadow-emerald-500/10 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mt-1 text-[10px] uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0"
                         >
-                            Continue Registration
+                            {otpLoading ? 'Sending OTP...' : 'Request Verification OTP'}
                             <ArrowRight size={14} />
                         </button>
-                    </div>
+                    </form>
                 );
             case 3:
+                return (
+                    <form onSubmit={handleVerifyOTP} className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <button type="button" onClick={prevStep} className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
+                                <ArrowLeft className="w-3.5 h-3.5 text-gray-600" />
+                            </button>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-800 tracking-tight leading-none mb-0.5">Email Verification</h3>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Validation Code Required</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-[11px] text-slate-500 font-medium">An authentication OTP has been sent to <span className="text-emerald-600 font-black">{formData.email}</span>. Please enter it below.</p>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">6-Digit OTP</label>
+                                <input
+                                    type="text"
+                                    maxLength={6}
+                                    placeholder="0 0 0 0 0 0"
+                                    required
+                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl outline-none focus:border-emerald-500/30 focus:bg-white transition-all text-center text-xl font-black tracking-[0.5em] h-14"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                />
+                            </div>
+                        </div>
+
+                        {error && <p className="text-red-500 text-[9px] font-bold text-center bg-red-50 py-1.5 rounded-lg border border-red-100">{error}</p>}
+
+                        <button
+                            type="submit"
+                            disabled={otp.length !== 6}
+                            className="w-full py-3.5 bg-slate-900 text-white font-black rounded-xl shadow-lg shadow-black/10 hover:bg-black hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0"
+                        >
+                            Verify & Continue
+                            <ShieldCheck size={14} />
+                        </button>
+
+                        <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Didn't receive? <button type="button" onClick={handleRequestOTP} className="text-emerald-600 hover:underline underline-offset-4">Resend Code</button>
+                        </p>
+                    </form>
+                );
+            case 4:
                 return (
                     <div className="space-y-3">
                         <div className="flex items-center gap-3">
@@ -369,7 +441,7 @@ const Signup = () => {
                         </button>
                     </div>
                 );
-            case 4:
+            case 5:
                 return (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}

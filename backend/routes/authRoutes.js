@@ -1,12 +1,16 @@
 import express from 'express';
-import { register, login, logout, getMe, getDoctors, getPatients, updateProfile, addDoctor, uploadProfilePhoto } from '../controllers/authController.js';
+import { register, login, logout, getMe, getDoctors, getPatients, updateProfile, addDoctor, uploadProfilePhoto, forgotPassword, resetPassword, requestSignupOTP } from '../controllers/authController.js';
+
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import upload from '../utils/upload.js';
 
 const router = express.Router();
 
 router.post('/signup', register);
+router.post('/request-signup-otp', requestSignupOTP);
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:resetToken', resetPassword);
 router.get('/logout', logout);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);

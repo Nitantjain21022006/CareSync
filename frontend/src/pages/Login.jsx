@@ -209,7 +209,7 @@ const Login = () => {
                                                 </div>
                                                 Remember Authority
                                             </label>
-                                            <a href="#" className="text-emerald-600 hover:text-emerald-700 hover:underline underline-offset-4 decoration-2">Lost Credentials?</a>
+                                            <Link to="/forgot-password" size={10} className="text-emerald-600 hover:text-emerald-700 hover:underline underline-offset-4 decoration-2">Lost Credentials?</Link>
                                         </div>
 
                                         {error && (

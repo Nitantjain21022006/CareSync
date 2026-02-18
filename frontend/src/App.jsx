@@ -8,6 +8,8 @@ import PatientDashboard from './pages/dashboards/patient/PatientDashboard';
 import DoctorDashboard from './pages/dashboards/doctor/DoctorDashboard';
 import StaffDashboard from './pages/dashboards/staff/StaffDashboard';
 import AdminDashboard from './pages/dashboards/admin/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const Unauthorized = () => {
   const { logout, user } = useAuth();
@@ -67,6 +69,8 @@ function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Patient Routes */}

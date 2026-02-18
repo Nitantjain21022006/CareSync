@@ -1,10 +1,94 @@
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import AuthLog from '../models/AuthLog.js';
 import DoctorPatient from '../models/DoctorPatient.js';
 import fs from 'fs';
 import path from 'path';
-import { sendEmail } from '../utils/email.js';
+import { sendEmail, sendOTPEmail, sendResetPasswordEmail } from '../utils/email.js';
+
+// @desc    Forgot password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res, next) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found with this email' });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(20).toString('hex');
+
+        // Hash and set to resetPasswordToken field
+        user.resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+
+        // Set expire (1 hour)
+        user.resetPasswordExpires = Date.now() + 3600000;
+
+        await user.save();
+
+        // Create reset URL
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        try {
+            await sendResetPasswordEmail(user.email, resetUrl);
+
+            res.status(200).json({ success: true, data: 'Email sent' });
+        } catch (err) {
+            console.error(err);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+
+            await user.save();
+
+            return res.status(500).json({ success: false, error: 'Email could not be sent' });
+        }
+    } catch (err) {
+        console.error('Forgot Password Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Reset password
+// @route   PUT /api/auth/reset-password/:resetToken
+// @access  Public
+export const resetPassword = async (req, res, next) => {
+    // Get hashed token
+    const resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(req.params.resetToken)
+        .digest('hex');
+
+    try {
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+        }
+
+        // Set new password
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        sendTokenResponse(user, 200, res);
+    } catch (err) {
+        console.error('Reset Password Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
 
 // Helper to set cookie
 const sendTokenResponse = (user, statusCode, res) => {
@@ -32,26 +116,70 @@ const sendTokenResponse = (user, statusCode, res) => {
         });
 };
 
+// @desc    Request Signup OTP
+// @route   POST /api/auth/request-signup-otp
+// @access  Public
+export const requestSignupOTP = async (req, res, next) => {
+    const { email } = req.body;
+
+    try {
+        let user = await User.findOne({ email });
+        if (user && user.isVerified) {
+            return res.status(400).json({ success: false, error: 'User already exists and is verified' });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = Date.now() + 600000; // 10 minutes
+
+        // Store OTP in the User model but keep it as isVerified: false.
+        if (!user) {
+            user = new User({
+                email,
+                password: 'placeholder_password_' + Date.now(), // temporary
+                fullName: 'Pending Verification',
+                role: 'patient',
+                isVerified: false
+            });
+        }
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        await sendOTPEmail(email, otp);
+
+        res.status(200).json({ success: true, message: 'OTP sent to email' });
+    } catch (err) {
+        console.error('Request OTP Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
 // @desc    Register user
 // @route   POST /api/auth/signup
 // @access  Public
 export const register = async (req, res, next) => {
-    const { email, password, fullName, role, phone, metadata } = req.body;
+    const { email, password, fullName, role, phone, metadata, otp } = req.body;
 
     try {
         let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ success: false, error: 'User already exists' });
+
+        if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired OTP' });
         }
 
-        user = await User.create({
-            email,
-            password,
-            fullName,
-            role: role || 'patient',
-            phone,
-            metadata: metadata || {}
-        });
+        // Update user with real data
+        user.password = password;
+        user.fullName = fullName;
+        user.role = role || 'patient';
+        user.phone = phone;
+        user.metadata = metadata || {};
+        user.isVerified = true;
+        user.otp = undefined;
+        user.otpExpires = undefined;
+
+        await user.save();
 
         // Log the signup event
         await AuthLog.create({
@@ -93,6 +221,14 @@ export const login = async (req, res, next) => {
         if (role && user.role !== role) {
             console.log(`Login failure: Role mismatch for user ${email}. Expected ${role}, found ${user.role}`);
             return res.status(403).json({ success: false, error: `Unauthorized role: ${role}` });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                error: 'Account not verified. Please verify your email before logging in.',
+                email: user.email // Provide email for resend UI
+            });
         }
 
         // Log login

@@ -1,10 +1,8 @@
-import * as SibApiV3Sdk from '@getbrevo/brevo';
+import axios from 'axios';
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-// Configure API key authorization
-const apiKey = apiInstance.authentications['apiKey'];
-apiKey.apiKey = process.env.BREVO_API_KEY;
+// Brevo API configuration
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 /**
  * @desc Send a transactional email via Brevo
@@ -13,22 +11,27 @@ apiKey.apiKey = process.env.BREVO_API_KEY;
  * @param {string} htmlContent - Email body in HTML
  */
 export const sendEmail = async (toEmail, subject, htmlContent) => {
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-
-    sendSmtpEmail.subject = subject;
-    sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = {
-        name: process.env.BREVO_SENDER_NAME || 'CareSync',
-        email: process.env.BREVO_SENDER_EMAIL || 'noreply@caresync.com'
+    const emailData = {
+        sender: {
+            name: process.env.BREVO_SENDER_NAME || 'CareSync',
+            email: process.env.BREVO_SENDER_EMAIL || 'noreply@caresync.com'
+        },
+        to: [{ email: toEmail }],
+        subject: subject,
+        htmlContent: htmlContent
     };
-    sendSmtpEmail.to = [{ email: toEmail }];
 
     try {
-        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log('Email sent successfully:', data.messageId);
-        return data;
+        const response = await axios.post(BREVO_API_URL, emailData, {
+            headers: {
+                'api-key': BREVO_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log('Email sent successfully:', response.data.messageId);
+        return response.data;
     } catch (error) {
-        console.error('Brevo Error:', error.response?.body || error.message);
+        console.error('Brevo Error:', error.response?.data || error.message);
         throw new Error('Email sending failed');
     }
 };
@@ -46,6 +49,24 @@ export const sendOTPEmail = async (email, otp) => {
             <p>Your verification code is: <strong style="font-size: 24px; color: #000;">${otp}</strong></p>
             <p>This code will expire in 10 minutes.</p>
             <p>If you did not request this, please ignore this email.</p>
+        </div>
+    `;
+    return await sendEmail(email, subject, htmlContent);
+};
+/**
+ * @desc Send password reset link
+ * @param {string} email - Recipient email
+ * @param {string} resetUrl - The reset URL with token
+ */
+export const sendResetPasswordEmail = async (email, resetUrl) => {
+    const subject = 'CareSync - Password Reset Request';
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
+            <h2 style="color: #4A90E2;">Password Reset</h2>
+            <p>You requested a password reset. Please click the button below to reset your password:</p>
+            <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4A90E2; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 10px;">Reset Password</a>
+            <p>If you did not request this, please ignore this email.</p>
+            <p>This link will expire in 1 hour.</p>
         </div>
     `;
     return await sendEmail(email, subject, htmlContent);

@@ -14,7 +14,8 @@ import {
     LockIcon,
     ChevronRight,
     UserCheck,
-    UserX
+    UserX,
+    History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../config/api';
@@ -22,8 +23,11 @@ import api from '../../../config/api';
 const AccessControl = () => {
     const [authorizedDoctors, setAuthorizedDoctors] = useState([]);
     const [allDoctors, setAllDoctors] = useState([]);
+    const [pendingRequests, setPendingRequests] = useState([]);
+    const [creationRequests, setCreationRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [accessLogs, setAccessLogs] = useState({ accessRequests: [], creationRequests: [] });
     const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
@@ -32,12 +36,18 @@ const AccessControl = () => {
 
     const fetchData = async () => {
         try {
-            const [authorizedRes, allRes] = await Promise.all([
+            const [authorizedRes, allRes, requestsRes, creationRes, logsRes] = await Promise.all([
                 api.get('/records/access/authorized'),
-                api.get('/auth/doctors')
+                api.get('/auth/doctors'),
+                api.get('/records/patient/access-requests'),
+                api.get('/records/creation-requests/pending'),
+                api.get('/records/patient/access-logs')
             ]);
             setAuthorizedDoctors(authorizedRes.data.data || []);
             setAllDoctors(allRes.data.data || []);
+            setPendingRequests(requestsRes.data.data || []);
+            setCreationRequests(creationRes.data.data || []);
+            setAccessLogs(logsRes.data.data || { accessRequests: [], creationRequests: [] });
         } catch (err) {
             console.error('Error fetching access data');
         } finally {
@@ -67,13 +77,36 @@ const AccessControl = () => {
         }
     };
 
+    const handleResponseToRequest = async (requestId, status) => {
+        try {
+            await api.patch(`/records/patient/access-request/${requestId}`, { status });
+            setMessage({ type: 'success', text: `Clinical request ${status} successfully.` });
+            fetchData();
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Protocol response failed.' });
+        }
+    };
+
+    const handleResponseToCreationRequest = async (requestId, status) => {
+        try {
+            await api.patch(`/records/creation-request/${requestId}`, { status });
+            setMessage({ type: 'success', text: `Clinical initiation ${status} successfully.` });
+            fetchData();
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Initiation response failed.' });
+        }
+    };
+
     const filteredDoctors = allDoctors.filter(doc =>
         doc.fullName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !authorizedDoctors.some(authDoc => authDoc._id === doc._id)
+        !authorizedDoctors.some(authDoc => authDoc._id === doc._id) &&
+        !pendingRequests.some(req => req.doctor?._id === doc._id)
     );
 
     return (
-        <div className="space-y-8 pb-12">
+        <div className="space-y-8 pb-12 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-5xl font-black text-slate-900 tracking-tighter flex items-center gap-4">
@@ -82,7 +115,7 @@ const AccessControl = () => {
                     <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mt-3 ml-1">Manage clinical authorizations & historical visibility.</p>
                 </div>
                 <div className="flex gap-4">
-                    <div className="px-8 py-4 bg-slate-50 border border-slate-100 rounded-[22px] flex items-center gap-4 shadow-inner">
+                    <div className="px-8 py-4 bg-white border border-slate-100 rounded-[22px] flex items-center gap-4 shadow-sm">
                         <LockIcon size={18} className="text-emerald-500" />
                         <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Protocol: V4 SECURE</span>
                     </div>
@@ -105,6 +138,106 @@ const AccessControl = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Pending Requests Section */}
+            {pendingRequests.length > 0 && (
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4 ml-4">
+                        <ShieldAlert className="h-7 w-7 text-amber-500" />
+                        Incoming Authorization Requests
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {pendingRequests.map((req, idx) => (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                key={req._id}
+                                className="bg-white border-2 border-amber-100 rounded-[40px] p-8 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-50" />
+                                <div className="flex items-center gap-6 mb-6">
+                                    <div className="h-16 w-16 rounded-[22px] bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 font-black shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
+                                        {req.doctor?.fullName[0]}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-black text-slate-900 text-xl tracking-tighter">Dr. {req.doctor?.fullName}</p>
+                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">{req.doctor?.metadata?.specialization || 'Clinical Specialist'}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-8">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Request Parameters</p>
+                                    <p className="text-xs font-bold text-slate-600 leading-relaxed italic">"{req.reason || 'Acquire clinical permissions for historical medical evaluations.'}"</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => handleResponseToRequest(req._id, 'rejected')}
+                                        className="flex-1 py-4 bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-2xl text-[9px] font-black uppercase tracking-widest border border-slate-100 transition-all shadow-sm"
+                                    >
+                                        DENY_SYNC
+                                    </button>
+                                    <button
+                                        onClick={() => handleResponseToRequest(req._id, 'approved')}
+                                        className="flex-[2] py-4 bg-emerald-600 text-white hover:bg-emerald-700 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <CheckCircle2 size={16} /> AUTHORIZE_LINK
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Creation Requests Section */}
+            {creationRequests.length > 0 && (
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4 ml-4">
+                        <UserPlus className="h-7 w-7 text-emerald-500" />
+                        Clinical Initiation Requests
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {creationRequests.map((req, idx) => (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                key={req._id}
+                                className="bg-white border-2 border-emerald-100 rounded-[40px] p-8 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-50" />
+                                <div className="flex items-center gap-6 mb-6">
+                                    <div className="h-16 w-16 rounded-[22px] bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
+                                        {req.doctor?.fullName[0]}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-black text-slate-900 text-xl tracking-tighter">Dr. {req.doctor?.fullName}</p>
+                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Requesting Clinical Initiation</p>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-8">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Proposed Clinical Context</p>
+                                    <p className="text-xs font-bold text-slate-600 leading-relaxed italic">"{req.initialNotes || 'Establishing a formal clinical relationship for medical recording.'}"</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => handleResponseToCreationRequest(req._id, 'rejected')}
+                                        className="flex-1 py-4 bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-2xl text-[9px] font-black uppercase tracking-widest border border-slate-100 transition-all shadow-sm"
+                                    >
+                                        REJECT_NODE
+                                    </button>
+                                    <button
+                                        onClick={() => handleResponseToCreationRequest(req._id, 'approved')}
+                                        className="flex-[2] py-4 bg-slate-900 text-white hover:bg-black rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <CheckCircle2 size={16} /> INITIALIZE_CARE
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Active Access List */}
@@ -164,21 +297,6 @@ const AccessControl = () => {
                             </div>
                         )}
                     </div>
-
-                    <div className="bg-slate-900 rounded-[50px] p-12 text-white shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] -mr-16 -mt-16 opacity-60" />
-                        <div className="flex gap-8 relative z-10">
-                            <div className="p-5 bg-white/5 border border-white/10 rounded-3xl h-fit shadow-inner transform group-hover:rotate-6 transition-transform">
-                                <Info size={30} className="text-emerald-400" />
-                            </div>
-                            <div className="space-y-6">
-                                <h4 className="text-3xl font-black tracking-tighter">Privacy Protocol V2</h4>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-relaxed max-w-md">
-                                    Authorization permits clinical stakeholders to synchronize with your complete diagnostic history. Access remains active until manual retraction sequence is initiated.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Grant New Access */}
@@ -202,7 +320,7 @@ const AccessControl = () => {
                             />
                         </div>
 
-                        <div className="space-y-4 max-h-[450px] overflow-y-auto pr-4 custom-scrollbar">
+                        <div className="space-y-4 max-h-[450px] overflow-y-auto pr-4 custom-scrollbar relative z-10">
                             {filteredDoctors.length > 0 ? (
                                 filteredDoctors.map((doc, idx) => (
                                     <motion.div
@@ -242,6 +360,57 @@ const AccessControl = () => {
                                 </div>
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* Request Log History */}
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4 ml-4">
+                        <History className="h-7 w-7 text-slate-900" />
+                        Access Protocol Log
+                    </h3>
+                    <div className="bg-white border border-slate-100 rounded-[50px] overflow-hidden shadow-xl">
+                        {[
+                            ...accessLogs.accessRequests.map(r => ({ ...r, type: 'Records Access' })),
+                            ...accessLogs.creationRequests.map(r => ({ ...r, type: 'Clinical Initiation' }))
+                        ].length > 0 ? (
+                            <div className="divide-y divide-slate-50">
+                                {[
+                                    ...accessLogs.accessRequests.map(r => ({ ...r, type: 'Records Access' })),
+                                    ...accessLogs.creationRequests.map(r => ({ ...r, type: 'Clinical Initiation' }))
+                                ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((log, idx) => (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        key={log._id}
+                                        className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-6">
+                                            <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black">
+                                                {log.doctor?.fullName[0]}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-3">
+                                                    <p className="font-black text-slate-900 text-sm">Dr. {log.doctor?.fullName}</p>
+                                                    <span className="text-[8px] px-2 py-0.5 bg-slate-900 text-white rounded-full font-black uppercase tracking-widest">{log.type}</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                                    {new Date(log.createdAt).toLocaleDateString()} • {log.status.toUpperCase()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border ${log.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                log.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                    'bg-amber-50 text-amber-600 border-amber-100'
+                                            }`}>
+                                            {log.status}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-20 text-center text-slate-300 uppercase text-[10px] font-black tracking-widest">No historical logs found</div>
+                        )}
                     </div>
                 </div>
             </div>

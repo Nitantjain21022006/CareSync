@@ -20,6 +20,7 @@ const AccessRequests = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [patients, setPatients] = useState([]);
     const [requests, setRequests] = useState([]);
+    const [creationRequests, setCreationRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [requestReason, setRequestReason] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -31,12 +32,14 @@ const AccessRequests = () => {
 
     const fetchInitialData = async () => {
         try {
-            const [patientsRes, requestsRes] = await Promise.all([
+            const [patientsRes, requestsRes, creationRes] = await Promise.all([
                 api.get('/auth/patients'),
-                api.get('/records/access/requests/pending')
+                api.get('/records/access/requests/pending'),
+                api.get('/records/creation-requests/doctor')
             ]);
             setPatients(patientsRes.data.data || []);
             setRequests(requestsRes.data.data || []);
+            setCreationRequests(creationRes.data.data || []);
         } catch (err) {
             console.error('Error fetching access data');
         } finally {
@@ -59,7 +62,7 @@ const AccessRequests = () => {
             fetchInitialData();
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
         } catch (err) {
-            setMessage({ type: 'error', text: 'Discription error: Request might already be active.' });
+            setMessage({ type: 'error', text: 'Deployment error: Request might already be active or invalid.' });
         }
     };
 
@@ -178,13 +181,16 @@ const AccessRequests = () => {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
                         <h3 className="text-lg font-bold text-slate-900 tracking-tight">Request Log</h3>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{requests.length} Pending Actions</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{requests.length + creationRequests.length} Active Records</span>
                     </div>
 
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                        {requests.length > 0 ? (
+                        {(requests.length > 0 || creationRequests.length > 0) ? (
                             <div className="divide-y divide-slate-50">
-                                {requests.map((req, idx) => (
+                                {[
+                                    ...requests.map(r => ({ ...r, logType: 'Records Access' })),
+                                    ...creationRequests.map(r => ({ ...r, logType: 'Patient Initiation', patient: { fullName: r.patientFullName, email: r.patientEmail } }))
+                                ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((req, idx) => (
                                     <motion.div
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
@@ -197,8 +203,15 @@ const AccessRequests = () => {
                                                 <UserSearch size={18} />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="font-bold text-slate-900 tracking-tight truncate capitalize">{req.patient?.fullName}</p>
-                                                <p className="text-[11px] text-slate-400 font-medium italic mt-0.5 truncate">"{req.reason}"</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-bold text-slate-900 tracking-tight truncate capitalize">{req.patient?.fullName}</p>
+                                                    <span className="text-[8px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-black uppercase tracking-tighter border border-slate-200">
+                                                        {req.logType}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-400 font-medium italic mt-0.5 truncate">
+                                                    {req.logType === 'Records Access' ? `"${req.reason}"` : `Initiated clinical link via ${req.patient?.email}`}
+                                                </p>
                                                 <div className="flex items-center gap-3 mt-3">
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                                                         <Clock size={12} className="text-emerald-500" />

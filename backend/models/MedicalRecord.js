@@ -13,7 +13,7 @@ const medicalRecordSchema = new mongoose.Schema({
     },
     recordType: {
         type: String,
-        enum: ['prescription', 'report', 'note', 'lab_result'],
+        enum: ['prescription', 'report', 'note', 'lab_result', 'consultation'],
         required: true
     },
     title: {

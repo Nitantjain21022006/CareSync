@@ -75,6 +75,7 @@ const PatientOverview = () => {
     const [loading, setLoading] = useState(true);
     const [searchLoading, setSearchLoading] = useState(false);
     const [creationRequests, setCreationRequests] = useState([]);
+    const [latestMetadata, setLatestMetadata] = useState(user?.metadata || {});
 
     useEffect(() => {
         fetchDashboardData();
@@ -98,6 +99,12 @@ const PatientOverview = () => {
                 reports: records.length,
                 prescriptions: prescriptionsCount
             });
+
+            // Refresh user data to get latest vitals
+            const userRes = await api.get('/auth/me');
+            if (userRes.data.data) {
+                setLatestMetadata(userRes.data.data.metadata || {});
+            }
         } catch (err) {
             console.error('Error fetching dashboard data');
         } finally {
@@ -353,17 +360,20 @@ const PatientOverview = () => {
                             </p>
                         </div>
 
-                        <button className="w-full mt-8 bg-white/10 hover:bg-white/20 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition-all">
+                        <Link
+                            to="/dashboard/patient/ai"
+                            className="w-full mt-8 bg-white/10 hover:bg-white/20 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition-all inline-block"
+                        >
                             Full Assessment
-                        </button>
+                        </Link>
                     </div>
 
                     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h3 className="text-sm font-bold text-slate-900 mb-6 tracking-wide uppercase border-b border-slate-50 pb-3">Real-time Biometrics</h3>
                         <div className="space-y-4">
                             {[
-                                { label: 'Weight', val: user?.metadata?.weight || 'N/A', icon: Activity, color: 'text-emerald-500' },
-                                { label: 'BP', val: user?.metadata?.bp || 'N/A', icon: Heart, color: 'text-rose-500' }
+                                { label: 'Weight', val: latestMetadata?.weight || 'N/A', icon: Activity, color: 'text-emerald-500' },
+                                { label: 'BP', val: latestMetadata?.bp || 'N/A', icon: Heart, color: 'text-rose-500' }
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group hover:bg-white hover:border-emerald-200 transition-all">
                                     <div className="flex items-center gap-3">

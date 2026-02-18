@@ -13,7 +13,7 @@ import {
     XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../../config/api';
 
 const StatCard = ({ title, value, icon: Icon, color, trend }) => (
@@ -140,10 +140,11 @@ const DoctorOverview = () => {
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [selectedAppt, setSelectedAppt] = useState(null);
     const [note, setNote] = useState('');
+    const navigate = useNavigate();
 
     const fetchDashboardData = async () => {
         try {
-            const [todayAppts, allAppts, statsRes, accessRes] = await Promise.all([
+            const [todayAppts, allAppts, statsRes, accessRes, patientsRes] = await Promise.all([
                 api.get('/appointments/doctor/today'),
                 api.get('/appointments/doctor'),
                 api.get('/appointments/doctor/stats'),
@@ -192,6 +193,20 @@ const DoctorOverview = () => {
         }
     };
 
+    const handleExport = () => {
+        alert('Compiling clinical registry for export...');
+        const data = authorizedPatients.map(p => `${p.fullName},${p.email}`).join('\n');
+        const blob = new Blob([`Name,Email\n${data}`], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'patient_registry.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
     return (
         <div className="space-y-8 pb-10 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -200,8 +215,18 @@ const DoctorOverview = () => {
                     <p className="text-slate-500 font-medium text-sm mt-1">Monitor clinical engagement and patient care delivery.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-50 transition-all shadow-sm">Export</button>
-                    <button className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md">New Session</button>
+                    <button
+                        onClick={handleExport}
+                        className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-50 transition-all shadow-sm"
+                    >
+                        Export
+                    </button>
+                    <button
+                        onClick={() => navigate('/dashboard/doctor/patients')}
+                        className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md"
+                    >
+                        New Session
+                    </button>
                 </div>
             </div>
 
@@ -319,7 +344,10 @@ const DoctorOverview = () => {
                                 </div>
                             )}
                         </div>
-                        <button className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all border border-white/10">
+                        <button
+                            onClick={() => navigate('/dashboard/doctor/patients')}
+                            className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all border border-white/10"
+                        >
                             Open Clinical Suite
                         </button>
                     </div>

@@ -268,8 +268,16 @@ export const updateAppointmentStatus = async (req, res) => {
 
         await appointment.save();
 
-        // Notify Patient if confirmed
+        // Create or update DoctorPatient relationship when confirmed
         if (req.body.status === 'confirmed') {
+            const DoctorPatient = (await import('../models/DoctorPatient.js')).default;
+            await DoctorPatient.findOneAndUpdate(
+                { doctor: appointment.doctor._id, patient: appointment.patient._id },
+                { status: 'active' },
+                { upsert: true, new: true }
+            );
+
+            // Notify Patient
             const subject = 'Consultation Confirmed - CareSync';
             const htmlContent = `
                 <div style="font-family: Arial, sans-serif; padding: 20px;">

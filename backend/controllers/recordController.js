@@ -332,6 +332,20 @@ export const getPendingCreationRequestsForPatient = async (req, res) => {
     }
 };
 
+// @desc    Get all creation requests sent by a doctor
+// @route   GET /api/records/doctor/creation-requests
+// @access  Private (Doctor)
+export const getDoctorCreationRequests = async (req, res) => {
+    try {
+        const requests = await PatientCreationRequest.find({
+            doctor: req.user.id
+        });
+        res.status(200).json({ success: true, count: requests.length, data: requests });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
 // @desc    Patient responds to creation request
 // @route   PATCH /api/records/creation-request/:requestId
 // @access  Private (Patient)
@@ -382,3 +396,210 @@ export const respondToCreationRequest = async (req, res) => {
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
+
+// @desc    Share a consultation with another doctor
+// @route   POST /api/records/share-consultation
+// @access  Private (Doctor)
+export const shareConsultation = async (req, res) => {
+    try {
+        const { patientId, targetDoctorId, summary } = req.body;
+
+        // Check if doctor is authorized for this patient
+        const isAuthorized = await DoctorPatient.findOne({
+            doctor: req.user.id,
+            patient: patientId,
+            status: 'active'
+        });
+
+        if (!isAuthorized) {
+            return res.status(403).json({ success: false, error: 'Unauthorized: You are not authorized for this patient.' });
+        }
+
+        const record = await MedicalRecord.create({
+            patient: patientId,
+            doctor: req.user.id,
+            recordType: 'consultation',
+            title: `Consultation Sharing: ${req.user.fullName}`,
+            description: summary,
+            accessibleBy: [req.user.id, targetDoctorId]
+        });
+
+        res.status(201).json({ success: true, data: record });
+    } catch (err) {
+        console.error('Share Consultation Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Get shared consultations for a doctor
+// @route   GET /api/records/shared-consultations
+// @access  Private (Doctor)
+export const getSharedConsultations = async (req, res) => {
+    try {
+        const consultations = await MedicalRecord.find({
+            recordType: 'consultation',
+            accessibleBy: req.user.id
+        }).populate('patient', 'fullName').populate('doctor', 'fullName');
+
+        res.status(200).json({ success: true, count: consultations.length, data: consultations });
+    } catch (err) {
+        console.error('Get Shared Consultations Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Get pending access requests for a patient
+// @route   GET /api/records/patient/access-requests
+// @access  Private (Patient)
+export const getPatientAccessRequests = async (req, res) => {
+    try {
+        const requests = await AccessRequest.find({
+            patient: req.user.id,
+            status: 'pending'
+        }).populate('doctor', 'fullName email metadata');
+
+        res.status(200).json({ success: true, data: requests });
+    } catch (err) {
+        console.error('Get Patient Access Requests Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Respond to access request (Approve/Reject)
+// @route   PATCH /api/records/patient/access-request/:requestId
+// @access  Private (Patient)
+export const respondToAccessRequest = async (req, res) => {
+    try {
+        const { status } = req.body; // 'approved' or 'rejected'
+        const { requestId } = req.params;
+
+        if (!['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, error: 'Invalid status' });
+        }
+
+        const request = await AccessRequest.findOne({
+            _id: requestId,
+            patient: req.user.id
+        });
+
+        if (!request) {
+            return res.status(404).json({ success: false, error: 'Request not found' });
+        }
+
+        request.status = status;
+        await request.save();
+
+        if (status === 'approved') {
+            // Create or update DoctorPatient relationship
+            await DoctorPatient.findOneAndUpdate(
+                { doctor: request.doctor, patient: request.patient },
+                { status: 'active' },
+                { upsert: true, new: true }
+            );
+
+            // Grant access to all existing records
+            await MedicalRecord.updateMany(
+                { patient: request.patient },
+                { $addToSet: { accessibleBy: request.doctor } }
+            );
+        }
+
+        res.status(200).json({ success: true, data: request });
+    } catch (err) {
+        console.error('Respond to Access Request Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Get all access logs for a patient (history)
+// @route   GET /api/records/patient/access-logs
+// @access  Private (Patient)
+export const getPatientAccessLogs = async (req, res) => {
+    try {
+        const [accessRequests, creationRequests] = await Promise.all([
+            AccessRequest.find({ patient: req.user.id }).populate('doctor', 'fullName email metadata'),
+            PatientCreationRequest.find({ patientEmail: req.user.email }).populate('doctor', 'fullName email metadata')
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                accessRequests,
+                creationRequests
+            }
+        });
+    } catch (err) {
+        console.error('Get Patient Access Logs Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Update patient vitals (metadata)
+// @route   PATCH /api/records/patient/:patientId/vitals
+// @access  Private (Doctor)
+export const updatePatientVitals = async (req, res) => {
+    try {
+        const { weight, bp } = req.body;
+        const patientId = req.params.patientId;
+
+        // Verify doctor authorization
+        const isAuthorized = await DoctorPatient.findOne({
+            doctor: req.user.id,
+            patient: patientId,
+            status: 'active'
+        });
+
+        if (!isAuthorized) {
+            return res.status(403).json({ success: false, error: 'No clinical authorization for this patient' });
+        }
+
+        const patient = await User.findById(patientId);
+        if (!patient) {
+            return res.status(404).json({ success: false, error: 'Patient not found' });
+        }
+
+        patient.metadata = {
+            ...patient.metadata,
+            weight: weight || patient.metadata.weight,
+            bp: bp || patient.metadata.bp
+        };
+
+        await patient.save();
+
+        res.status(200).json({ success: true, data: patient.metadata });
+    } catch (err) {
+        console.error('Update Patient Vitals Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Get authorized doctors for a specific patient (for collaboration)
+// @route   GET /api/records/patient/:patientId/authorized-doctors
+// @access  Private (Doctor)
+export const getPatientAuthorizedDoctors = async (req, res) => {
+    try {
+        const patientId = req.params.patientId;
+
+        // Ensure the requesting doctor is authorized for this patient
+        const selfAuth = await DoctorPatient.findOne({
+            doctor: req.user.id,
+            patient: patientId,
+            status: 'active'
+        });
+
+        if (!selfAuth) {
+            return res.status(403).json({ success: false, error: 'Authorization required for collaboration sync' });
+        }
+
+        const authorizations = await DoctorPatient.find({
+            patient: patientId,
+            status: 'active'
+        }).populate('doctor', 'fullName email metadata');
+
+        res.status(200).json({ success: true, data: authorizations.map(a => a.doctor) });
+    } catch (err) {
+        console.error('Get Patient Authorized Doctors Error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+

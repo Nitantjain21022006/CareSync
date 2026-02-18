@@ -54,7 +54,10 @@ const DoctorAppointments = () => {
     const pendingAppts = appointments.filter(a => a.status === 'pending');
     const confirmedAppts = appointments.filter(a => a.status === 'confirmed');
 
-    const filteredAppts = (activeTab === 'pending' ? pendingAppts : confirmedAppts).filter(a =>
+    const filteredAppts = (
+        activeTab === 'all' ? appointments :
+            activeTab === 'pending' ? pendingAppts : confirmedAppts
+    ).filter(a =>
         a.patient?.fullName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -73,8 +76,8 @@ const DoctorAppointments = () => {
                     <button
                         onClick={() => setActiveTab('pending')}
                         className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'pending'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-600'
+                            ? 'bg-white text-emerald-600 shadow-sm'
+                            : 'text-slate-400 hover:text-slate-600'
                             }`}
                     >
                         Pending ({pendingAppts.length})
@@ -82,11 +85,20 @@ const DoctorAppointments = () => {
                     <button
                         onClick={() => setActiveTab('confirmed')}
                         className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'confirmed'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-600'
+                            ? 'bg-white text-emerald-600 shadow-sm'
+                            : 'text-slate-400 hover:text-slate-600'
                             }`}
                     >
                         Confirmed ({confirmedAppts.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('all')}
+                        className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'all'
+                            ? 'bg-white text-emerald-600 shadow-sm'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                    >
+                        All ({appointments.length})
                     </button>
                 </div>
                 <div className="relative w-full sm:w-72 mt-2 sm:mt-0">
@@ -124,8 +136,8 @@ const DoctorAppointments = () => {
                                             {appt.patient?.fullName[0]}
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${appt.status === 'pending'
-                                                ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                            ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                            : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                             }`}>
                                             {appt.status}
                                         </div>
@@ -175,7 +187,10 @@ const DoctorAppointments = () => {
                                             </button>
                                         </>
                                     ) : (
-                                        <button className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md flex items-center justify-center gap-2 group/btn">
+                                        <button
+                                            onClick={() => window.location.href = `/dashboard/doctor/patients?patientId=${appt.patient?._id}`}
+                                            className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md flex items-center justify-center gap-2 group/btn"
+                                        >
                                             Open Clinical Suite <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-all" />
                                         </button>
                                     )}

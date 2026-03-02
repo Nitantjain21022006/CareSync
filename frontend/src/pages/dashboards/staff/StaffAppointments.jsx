@@ -181,7 +181,12 @@ const StaffAppointments = () => {
                                                 </button>
                                             </div>
                                             <div className="md:block hidden group-hover:hidden">
-                                                <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 uppercase tracking-widest">Awaiting</span>
+                                                <span className={`text-[10px] font-black px-3 py-1.5 rounded-lg border uppercase tracking-widest ${appt.status === 'confirmed' ? 'text-[#2D7D6F] bg-[#E9F5F3] border-[#2D7D6F]/20' :
+                                                        appt.status === 'cancelled' ? 'text-red-500 bg-red-50 border-red-100' :
+                                                            'text-amber-500 bg-amber-50 border-amber-100'
+                                                    }`}>
+                                                    {appt.status}
+                                                </span>
                                             </div>
                                         </td>
                                     </motion.tr>

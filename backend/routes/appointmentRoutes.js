@@ -8,6 +8,7 @@ import {
     getPatientStats,
     getStaffStats,
     getPendingAppointments,
+    getStaffTodayAppointments,
     updateAppointmentStatus
 } from '../controllers/appointmentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -22,6 +23,7 @@ router.get('/doctor/stats', protect, authorize('doctor'), getDoctorStats);
 router.get('/patient/stats', protect, authorize('patient'), getPatientStats);
 router.get('/staff/stats', protect, authorize('hospital_staff'), getStaffStats);
 router.get('/staff/pending', protect, authorize('hospital_staff'), getPendingAppointments);
+router.get('/staff/today', protect, authorize('hospital_staff'), getStaffTodayAppointments);
 router.patch('/update-status/:id', protect, authorize('hospital_staff', 'admin', 'doctor'), updateAppointmentStatus);
 
 export default router;

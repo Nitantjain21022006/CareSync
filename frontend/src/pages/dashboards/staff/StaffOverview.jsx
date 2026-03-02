@@ -186,11 +186,15 @@ const StaffOverview = () => {
                         </h3>
                         <div className="space-y-3 relative z-10">
                             {[
-                                { label: 'Register New Patient', icon: UserPlus },
-                                { label: 'Generate Billing Cycle', icon: CreditCard },
-                                { label: 'Clinical Occupancy', icon: Users }
+                                { label: 'Register New Patient', icon: UserPlus, link: '/dashboard/staff/checkin' },
+                                { label: 'Generate Billing Cycle', icon: CreditCard, link: '/dashboard/staff/billing' },
+                                { label: 'Clinical Occupancy', icon: Users, link: '/dashboard/staff/appointments' }
                             ].map((item, i) => (
-                                <button key={i} className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-between px-6 transition-all border border-white/5">
+                                <button
+                                    key={i}
+                                    onClick={() => window.location.href = item.link}
+                                    className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-between px-6 transition-all border border-white/5"
+                                >
                                     <div className="flex items-center gap-3">
                                         <item.icon size={16} className="text-[#2D7D6F]" />
                                         {item.label}
@@ -213,9 +217,12 @@ const StaffOverview = () => {
                             </div>
                         </div>
                         <p className="text-[#718096] text-xs font-bold leading-relaxed">
-                            There are <span className="text-[#1A202C] font-black">3 high-priority</span> invoices requiring immediate reconciliation.
+                            There are <span className="text-[#1A202C] font-black">{stats.activeAlerts || 0} high-priority</span> invoices requiring immediate reconciliation.
                         </p>
-                        <button className="w-full mt-6 py-3 border border-[#E2E8F0] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#F8FBFA] transition-all">
+                        <button
+                            onClick={() => window.location.href = '/dashboard/staff/billing'}
+                            className="w-full mt-6 py-3 border border-[#E2E8F0] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#F8FBFA] transition-all"
+                        >
                             Resolve All
                         </button>
                     </div>

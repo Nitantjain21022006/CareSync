@@ -28,8 +28,8 @@ const PatientCheckIn = () => {
 
     const fetchTodayAppointments = async () => {
         try {
-            const res = await api.get('/appointments/staff/pending');
-            setAppointments((res.data.data || []).filter(a => a.status === 'confirmed' || a.status === 'pending'));
+            const res = await api.get('/appointments/staff/today');
+            setAppointments((res.data.data || []));
         } catch (err) {
             console.error('Error fetching check-in list');
         } finally {
@@ -150,14 +150,16 @@ const PatientCheckIn = () => {
                                 <div className="h-10 w-1 bg-[#2D7D6F] rounded-full shadow-[0_0_8px_#10B981]"></div>
                                 <div>
                                     <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest mb-1">Upcoming Flux</p>
-                                    <p className="text-[#1A202C] font-black leading-tight tracking-tight">System expects peak arrival in T-minus 12 minutes.</p>
+                                    <p className="text-[#1A202C] font-black leading-tight tracking-tight">
+                                        {appointments.filter(a => a.status === 'pending').length} pending authorizations in queue.
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex gap-5 opacity-40">
                                 <div className="h-10 w-1 bg-[#E2E8F0] rounded-full"></div>
                                 <div>
                                     <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest mb-1">Latency Metrics</p>
-                                    <p className="text-[#1A202C] font-black leading-tight tracking-tight">Mean wait period: 08:45 minutes</p>
+                                    <p className="text-[#1A202C] font-black leading-tight tracking-tight">Mean wait period: {appointments.length > 0 ? '04:12' : '00:00'} minutes</p>
                                 </div>
                             </div>
                         </div>

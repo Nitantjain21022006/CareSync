@@ -45,6 +45,7 @@ app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 
 // Body parsers
 app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // Required for Twilio webhook POST bodies
 app.use(cookieParser());
 
 // Mongo sanitize REMOVED to fix getter property crash

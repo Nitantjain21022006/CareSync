@@ -174,6 +174,7 @@ const BillingManagement = () => {
                                         </td>
                                         <td className="px-10 py-8">
                                             <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest">{new Date(bill.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                            {bill.description && <p className="text-[9px] text-[#A0AEC0] mt-1 font-bold truncate max-w-[150px]" title={bill.description}>{bill.description}</p>}
                                         </td>
                                         <td className="px-10 py-8">
                                             <span className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border ${bill.status === 'paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'

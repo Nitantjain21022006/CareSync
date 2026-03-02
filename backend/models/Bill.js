@@ -14,6 +14,9 @@ const billSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    description: {
+        type: String
+    },
     currency: {
         type: String,
         default: 'usd'

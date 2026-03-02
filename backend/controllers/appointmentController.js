@@ -237,7 +237,31 @@ export const getPendingAppointments = async (req, res) => {
     try {
         const appointments = await Appointment.find({ status: 'pending' })
             .populate('patient', 'fullName')
-            .populate('doctor', 'fullName');
+            .populate('doctor', 'fullName metadata');
+        res.status(200).json({ success: true, count: appointments.length, data: appointments });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Get all appointments for today for staff (Live Intake)
+// @route   GET /api/appointments/staff/today
+// @access  Private (Staff)
+export const getStaffTodayAppointments = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const appointments = await Appointment.find({
+            date: { $gte: today, $lt: tomorrow },
+            status: { $in: ['pending', 'confirmed'] }
+        })
+            .populate('patient', 'fullName')
+            .populate('doctor', 'fullName metadata')
+            .sort('timeSlot');
+
         res.status(200).json({ success: true, count: appointments.length, data: appointments });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Server Error' });

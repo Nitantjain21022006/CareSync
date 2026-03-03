@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const billSchema = new mongoose.Schema({
+    invoiceId: {
+        type: String,
+        unique: true,
+        required: true
+    },
     patient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -10,13 +15,14 @@ const billSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Appointment'
     },
-    amount: {
+    totalAmount: {
         type: Number,
         required: true
     },
-    description: {
-        type: String
-    },
+    items: [{
+        description: { type: String, required: true },
+        amount: { type: Number, required: true }
+    }],
     currency: {
         type: String,
         default: 'usd'
@@ -25,6 +31,10 @@ const billSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'paid', 'failed', 'refunded'],
         default: 'pending'
+    },
+    createdByStaff: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
     stripePaymentIntentId: String,
     billingDate: {

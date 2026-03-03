@@ -28,8 +28,13 @@ const PatientCheckIn = () => {
 
     const fetchTodayAppointments = async () => {
         try {
-            const res = await api.get('/appointments/staff/today');
-            setAppointments((res.data.data || []));
+            const res = await api.get('/staff/appointments');
+            const todayStr = new Date().toLocaleDateString();
+            const todayAppts = (res.data || []).filter(a =>
+                new Date(a.date).toLocaleDateString() === todayStr &&
+                (a.status === 'scheduled' || a.status === 'checked-in' || a.status === 'waiting')
+            );
+            setAppointments(todayAppts);
         } catch (err) {
             console.error('Error fetching check-in list');
         } finally {
@@ -39,8 +44,8 @@ const PatientCheckIn = () => {
 
     const handleCheckIn = async (apptId) => {
         try {
-            await api.put(`/appointments/update-status/${apptId}`, { status: 'confirmed' });
-            setMessage({ type: 'success', text: 'Patient session initiated successfully.' });
+            await api.post('/staff/checkin', { appointmentId: apptId });
+            setMessage({ type: 'success', text: 'Patient status updated to Checked-In.' });
             fetchTodayAppointments();
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
         } catch (err) {

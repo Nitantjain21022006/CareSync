@@ -41,14 +41,15 @@ const StaffOverview = () => {
     useEffect(() => {
         const fetchStaffData = async () => {
             try {
-                const [statsRes, apptsRes] = await Promise.all([
-                    api.get('/appointments/staff/stats'),
-                    api.get('/appointments/staff/pending')
+                const [metricsRes, apptsRes] = await Promise.all([
+                    api.get('/staff/dashboard-metrics'),
+                    api.get('/staff/appointments')
                 ]);
-                setStats(statsRes.data.data);
-                setAppointments(apptsRes.data.data);
+                setStats(metricsRes.data);
+                // Filter for just pending/scheduled for the "Action Required" list
+                setAppointments(apptsRes.data.filter(a => a.status === 'pending' || a.status === 'scheduled').slice(0, 5));
             } catch (err) {
-                console.error('Error fetching staff data');
+                console.error('Error fetching staff data', err);
             } finally {
                 setLoading(false);
             }
@@ -58,9 +59,11 @@ const StaffOverview = () => {
 
     const handleApprove = async (id) => {
         try {
-            await api.put(`/appointments/update-status/${id}`, { status: 'confirmed' });
+            await api.patch(`/staff/appointments/${id}/status`, { status: 'scheduled' });
             setAppointments(prev => prev.filter(appt => appt._id !== id));
-            setStats(prev => ({ ...prev, pendingApprovals: prev.pendingApprovals - 1, checkinsToday: prev.checkinsToday + 1 }));
+            // Refresh metrics after approval
+            const metricsRes = await api.get('/staff/dashboard-metrics');
+            setStats(metricsRes.data);
         } catch (err) {
             console.error('Error approving appointment');
         }
@@ -84,32 +87,32 @@ const StaffOverview = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Action Required"
-                    value={stats.pendingApprovals}
-                    subValue="Pending Requests"
+                    title="Total Today"
+                    value={stats.totalToday}
+                    subValue="Scheduled for queue"
                     icon={CalendarCheck}
                     color="bg-emerald-500 text-emerald-500"
                 />
                 <StatCard
-                    title="Active Check-ins"
-                    value={stats.checkinsToday}
-                    subValue="Today's Intake"
+                    title="Checked In"
+                    value={stats.checkedIn}
+                    subValue="On-site now"
                     icon={UserPlus}
                     color="bg-emerald-400 text-emerald-400"
                 />
                 <StatCard
                     title="Revenue Flow"
-                    value={`$${(stats.billedAmount || 0).toLocaleString()}`}
-                    subValue="Processed Today"
+                    value={`$${(stats.revenueToday || 0).toLocaleString()}`}
+                    subValue="Paid Today"
                     icon={CreditCard}
                     color="bg-emerald-600 text-emerald-600"
                 />
                 <StatCard
-                    title="System Alerts"
-                    value={stats.activeAlerts}
-                    subValue="Operational Status"
+                    title="Pending Payments"
+                    value={stats.pendingPayments}
+                    subValue="Awaiting Invoices"
                     icon={Activity}
-                    color="bg-red-500 text-red-500"
+                    color="bg-amber-500 text-amber-500"
                 />
             </div>
 

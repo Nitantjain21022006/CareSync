@@ -14,9 +14,14 @@ const ConsultationSummary = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const [decision, setDecision] = useState(null); // 'continue' or 'end'
 
     const handleFileChange = (e) => {
         setPrescription(e.target.files[0]);
+    };
+
+    const handleContinue = () => {
+        navigate(`/consultation/video/${appointmentId}`);
     };
 
     const handleSubmit = async (e) => {
@@ -25,7 +30,7 @@ const ConsultationSummary = () => {
         setError(null);
 
         try {
-            // 1. Save Summary
+            // 1. Save Summary & prescription (This sets payEnable: true)
             await api.post('/consultation/summary', {
                 appointmentId,
                 notes,
@@ -33,7 +38,6 @@ const ConsultationSummary = () => {
                 status: 'completed'
             });
 
-            // 2. Upload Prescription if exists
             if (prescription) {
                 const formData = new FormData();
                 formData.append('prescription', prescription);
@@ -45,109 +49,131 @@ const ConsultationSummary = () => {
 
             setSuccess(true);
             setLoading(false);
-
-            // Redirect after 2 seconds
-            setTimeout(() => {
-                navigate('/dashboard/doctor');
-            }, 2000);
-
+            setTimeout(() => navigate('/dashboard/doctor'), 2000);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save consultation summary');
             setLoading(false);
         }
     };
 
+    if (!decision) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+                <div className="bg-white p-12 rounded-[3rem] shadow-2xl max-w-2xl w-full text-center space-y-8 animate-in zoom-in duration-500">
+                    <div className="mx-auto w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center">
+                        <Loader2 className="w-12 h-12 text-indigo-600 animate-pulse" />
+                    </div>
+                    <div>
+                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Session Interrupted</h2>
+                        <p className="text-slate-500 font-medium mt-2">The video stream has ended. How would you like to proceed with this patient?</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <button
+                            onClick={handleContinue}
+                            className="bg-indigo-600 text-white p-6 rounded-3xl font-bold flex flex-col items-center justify-center gap-3 hover:bg-indigo-700 transition-all group border-4 border-indigo-100"
+                        >
+                            <Loader2 className="w-8 h-8 group-hover:rotate-12 transition-transform" />
+                            <div className="text-left w-full text-center">
+                                <p className="text-lg">Reconnect Session</p>
+                                <p className="text-indigo-200 text-xs font-normal">Back to video room</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setDecision('end')}
+                            className="bg-slate-900 text-white p-6 rounded-3xl font-bold flex flex-col items-center justify-center gap-3 hover:bg-slate-800 transition-all group"
+                        >
+                            <CheckCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                            <div className="text-left w-full text-center">
+                                <p className="text-lg">Mark as Completed</p>
+                                <p className="text-slate-400 text-xs font-normal">Finalize notes & Billing</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (success) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Consultation Completed</h2>
-                    <p className="text-slate-600 mb-6">The summary and prescription have been saved successfully. Redirecting to dashboard...</p>
+            <div className="min-h-screen bg-emerald-500 flex items-center justify-center p-4">
+                <div className="text-center text-white space-y-4">
+                    <CheckCircle className="w-24 h-24 mx-auto animate-bounce" />
+                    <h2 className="text-4xl font-black tracking-tighter">Summary Dispatched</h2>
+                    <p className="text-emerald-100 font-medium">Pay-Enable trigger sent to finance. Redirecting...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6 md:p-12">
-            <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
-                <div className="bg-indigo-600 p-8 text-white">
-                    <div className="flex items-center space-x-3 mb-2">
-                        <Clipboard className="w-8 h-8" />
-                        <h1 className="text-3xl font-bold">Consultation Summary</h1>
+        <div className="min-h-screen bg-[#F8FBFA] p-6 md:p-12 lg:p-20">
+            <div className="max-w-4xl mx-auto bg-white rounded-[3.5rem] shadow-2xl overflow-hidden border border-slate-100">
+                <div className="bg-indigo-600 p-12 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+                    <div className="relative z-10">
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                                <Clipboard className="w-8 h-8" />
+                            </div>
+                            <h1 className="text-4xl font-black tracking-tighter">Clinical Summary</h1>
+                        </div>
+                        <p className="text-indigo-100 font-medium max-w-xl">Finalize the medical record. Submitting this form will enable automated billing for this patient.</p>
                     </div>
-                    <p className="text-indigo-100 opacity-90">Please provide the final notes and upload the prescription for this session.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                    {/* Call Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <p className="text-sm text-slate-500 uppercase font-semibold">Appointment ID</p>
-                            <p className="text-lg font-mono text-slate-800">{appointmentId}</p>
+                <form onSubmit={handleSubmit} className="p-12 space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-indigo-100 rounded-lg"><CheckCircle className="w-4 h-4 text-indigo-600" /></div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Case Reference</p>
+                            </div>
+                            <p className="text-xl font-black text-slate-800 tracking-tight">#{appointmentId.slice(-8).toUpperCase()}</p>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <p className="text-sm text-slate-500 uppercase font-semibold">Duration</p>
-                            <p className="text-lg text-slate-800">{Math.round(duration / 60)} minutes</p>
+                        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-indigo-100 rounded-lg"><Loader2 className="w-4 h-4 text-indigo-600" /></div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recorded Sync</p>
+                            </div>
+                            <p className="text-xl font-black text-slate-800 tracking-tight">{Math.round(duration / 60)} Effective Minutes</p>
                         </div>
                     </div>
 
-                    {/* Notes Section */}
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
-                            <FileText className="w-4 h-4 mr-2 text-indigo-600" />
-                            Consultation Notes
-                        </label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-3 block">Physician Observations</label>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             required
-                            placeholder="Describe symptoms, diagnosis, and advice..."
-                            className="w-full h-48 p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none"
+                            placeholder="Detail diagnosis, advice, and internal clinical notes..."
+                            className="w-full h-64 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 outline-none transition-all resize-none font-medium text-slate-700 leading-relaxed"
                         ></textarea>
                     </div>
 
-                    {/* Prescription Section */}
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
-                            <Upload className="w-4 h-4 mr-2 text-indigo-600" />
-                            Upload Prescription (PDF / Image)
-                        </label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-3 block">Pharmacy & Lab Orders (PDF/IMG)</label>
                         <div className="relative group">
-                            <input
-                                type="file"
-                                onChange={handleFileChange}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                accept=".pdf,image/*"
-                            />
-                            <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center group-hover:border-indigo-400 transition-colors bg-slate-5 ratio-16/9 flex flex-col items-center justify-center">
-                                <Upload className="w-10 h-10 text-slate-400 mb-3 group-hover:text-indigo-500" />
-                                <p className="text-slate-600 font-medium">
-                                    {prescription ? prescription.name : "Click to select or drag & drop"}
-                                </p>
-                                <p className="text-slate-400 text-xs mt-1">Maximum file size: 5MB</p>
+                            <input type="file" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,image/*" />
+                            <div className="border-4 border-dashed border-slate-100 rounded-[2.5rem] p-12 text-center group-hover:border-indigo-400 group-hover:bg-indigo-50/30 transition-all bg-slate-50 flex flex-col items-center justify-center">
+                                <Upload className="w-12 h-12 text-slate-300 mb-4 group-hover:text-indigo-500 group-hover:bounce" />
+                                <p className="text-slate-600 font-bold text-lg">{prescription ? prescription.name : "Securely Upload Prescription"}</p>
+                                <p className="text-slate-400 text-sm mt-2 font-medium">Drop files here or click to browse</p>
                             </div>
                         </div>
                     </div>
 
-                    {error && (
-                        <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium">
-                            {error}
-                        </div>
-                    )}
+                    {error && <div className="p-6 bg-red-50 text-red-600 rounded-3xl text-sm font-black border border-red-100 animate-shake">{error}</div>}
 
-                    <div className="flex justify-end pt-4">
+                    <div className="flex gap-4 pt-6">
+                        <button type="button" onClick={() => setDecision(null)} className="flex-1 py-5 bg-slate-100 text-slate-600 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Re-evaluate Session</button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`flex items-center space-x-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg ${loading
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
-                                }`}
+                            className={`flex-1 py-5 rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 ${loading ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'}`}
                         >
-                            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-                            <span>{loading ? "Saving..." : "Save and Finish"}</span>
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                            <span>Finalize Clinical Record</span>
                         </button>
                     </div>
                 </form>

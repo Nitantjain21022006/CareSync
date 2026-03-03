@@ -9,8 +9,9 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
  * @param {string} toEmail - Recipient email
  * @param {string} subject - Email subject
  * @param {string} htmlContent - Email body in HTML
+ * @param {Array} attachments - Optional attachments [{ content: 'base64', name: 'file.pdf' }]
  */
-export const sendEmail = async (toEmail, subject, htmlContent) => {
+export const sendEmail = async (toEmail, subject, htmlContent, attachments = []) => {
     const emailData = {
         sender: {
             name: process.env.BREVO_SENDER_NAME || 'CareSync',
@@ -20,6 +21,10 @@ export const sendEmail = async (toEmail, subject, htmlContent) => {
         subject: subject,
         htmlContent: htmlContent
     };
+
+    if (attachments && attachments.length > 0) {
+        emailData.attachment = attachments;
+    }
 
     try {
         const response = await axios.post(BREVO_API_URL, emailData, {

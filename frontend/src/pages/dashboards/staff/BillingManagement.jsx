@@ -20,15 +20,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../config/api';
 
 const BillingManagement = () => {
+    const [appointments, setAppointments] = useState([]);
+    const [formData, setFormData] = useState({
+        patient: '',
+        appointmentId: '',
+        items: [{ description: 'Consultation Fee', amount: '' }],
+        description: ''
+    });
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ patientEmail: '', amount: '', description: '' });
 
     useEffect(() => {
         fetchBills();
+        fetchAppointments();
     }, []);
 
     const fetchBills = async () => {
@@ -42,30 +49,63 @@ const BillingManagement = () => {
         }
     };
 
-    const handleCreateBill = async (e) => {
-        e.preventDefault();
+    const fetchAppointments = async () => {
         try {
-            await api.post('/billing', {
-                patient: formData.patientEmail,
-                amount: parseFloat(formData.amount),
-                description: formData.description
-            });
-            setShowModal(false);
-            setFormData({ patientEmail: '', amount: '', description: '' });
-            fetchBills();
+            const res = await api.get('/staff/appointments');
+            // Only allow billing for completed appointments where doctor has enabled payment (payEnable === true)
+            setAppointments(res.data.filter(a => a.status === 'completed' && a.payEnable === true));
         } catch (err) {
-            console.error('Error creating bill');
+            console.error('Error fetching appointments');
         }
     };
 
+    const handleCreateBill = async (e) => {
+        e.preventDefault();
+        try {
+            const selectedAppt = appointments.find(a => a._id === formData.appointmentId);
+            await api.post('/billing', {
+                patient: selectedAppt?.patient?._id || formData.patient,
+                appointmentId: formData.appointmentId,
+                items: formData.items.map(item => ({
+                    description: item.description,
+                    amount: parseFloat(item.amount)
+                })),
+                description: formData.description
+            });
+            setShowModal(false);
+            setFormData({ patient: '', appointmentId: '', items: [{ description: '', amount: '' }], description: '' });
+            fetchBills();
+            fetchAppointments(); // Refresh list
+        } catch (err) {
+            console.error('Error creating bill', err);
+            alert(err.response?.data?.error || 'Error creating bill');
+        }
+    };
+
+    const addItem = () => {
+        setFormData({ ...formData, items: [...formData.items, { description: '', amount: '' }] });
+    };
+
+    const removeItem = (index) => {
+        const newItems = formData.items.filter((_, i) => i !== index);
+        setFormData({ ...formData, items: newItems });
+    };
+
+    const updateItem = (index, field, value) => {
+        const newItems = [...formData.items];
+        newItems[index][field] = value;
+        setFormData({ ...formData, items: newItems });
+    };
+
     const filtered = bills.filter(bill => {
-        const matchesSearch = bill.patient?.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+        const fullName = bill.patient?.fullName || '';
+        const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || bill.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
 
-    const totalRevenue = bills.reduce((acc, b) => b.status === 'paid' ? acc + b.amount : acc, 0);
-    const pendingRevenue = bills.reduce((acc, b) => b.status === 'pending' ? acc + b.amount : acc, 0);
+    const totalRevenue = bills.reduce((acc, b) => b.status === 'paid' ? acc + (b.totalAmount || 0) : acc, 0);
+    const pendingRevenue = bills.reduce((acc, b) => b.status === 'pending' ? acc + (b.totalAmount || 0) : acc, 0);
 
     return (
         <div className="space-y-8 pb-12">
@@ -165,12 +205,12 @@ const BillingManagement = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-[#1A202C] tracking-tight">{bill.patient?.fullName}</p>
-                                                    <p className="text-[9px] text-[#A0AEC0] font-black uppercase tracking-widest mt-1">ID: #{bill._id.slice(-6).toUpperCase()}</p>
+                                                    <p className="text-[9px] text-[#A0AEC0] font-black uppercase tracking-widest mt-1">ID: #{bill.invoiceId || bill._id.slice(-6).toUpperCase()}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-10 py-8">
-                                            <p className="text-md font-black text-[#1A202C] tracking-tighter">${bill.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                            <p className="text-md font-black text-[#1A202C] tracking-tighter">${(bill.totalAmount || bill.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                         </td>
                                         <td className="px-10 py-8">
                                             <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest">{new Date(bill.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
@@ -227,53 +267,100 @@ const BillingManagement = () => {
                                     <X className="h-6 w-6 text-[#1A202C]" />
                                 </button>
                             </div>
-                            <form onSubmit={handleCreateBill} className="p-10 space-y-8">
+                            <form onSubmit={handleCreateBill} className="p-10 space-y-6">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em] ml-2">Patient Primary Email</label>
-                                    <input
-                                        className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl px-6 py-4 text-[#1A202C] font-bold focus:outline-none focus:border-[#2D7D6F] transition-all shadow-sm"
-                                        type="email"
+                                    <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em] ml-2">Select Completed Appointment</label>
+                                    <select
+                                        className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl px-6 py-4 text-[#1A202C] font-bold focus:outline-none focus:border-[#2D7D6F] transition-all shadow-sm appearance-none"
                                         required
-                                        placeholder="institutional-id@medicare.com"
-                                        value={formData.patientEmail}
-                                        onChange={e => setFormData({ ...formData, patientEmail: e.target.value })}
-                                    />
+                                        value={formData.appointmentId}
+                                        onChange={e => setFormData({ ...formData, appointmentId: e.target.value })}
+                                    >
+                                        <option value="">Select an appointment...</option>
+                                        {appointments.map(a => (
+                                            <option key={a._id} value={a._id}>
+                                                {new Date(a.date).toLocaleDateString()} - {a.patient?.fullName} (Dr. {a.doctor?.fullName.split(' ')[1]})
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em] ml-2">Monetary Volume (USD)</label>
-                                    <div className="relative">
-                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-[#A0AEC0]">$</span>
-                                        <input
-                                            className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl pl-10 pr-6 py-4 text-[#1A202C] font-black text-xl focus:outline-none focus:border-[#2D7D6F] transition-all shadow-sm"
-                                            type="number"
-                                            required
-                                            placeholder="00.00"
-                                            value={formData.amount}
-                                            onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                                        />
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between ml-2">
+                                        <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em]">Clinical Line Items</label>
+                                        <button
+                                            type="button"
+                                            onClick={addItem}
+                                            className="text-[#2D7D6F] hover:text-[#1A202C] transition-colors"
+                                        >
+                                            <Plus size={16} />
+                                        </button>
+                                    </div>
+
+                                    <div className="max-h-48 overflow-y-auto pr-2 space-y-3">
+                                        {formData.items.map((item, index) => (
+                                            <div key={index} className="flex gap-3 animate-in fade-in slide-in-from-top-2">
+                                                <input
+                                                    className="flex-1 bg-[#F8FBFA] border border-[#E2E8F0] rounded-xl px-4 py-3 text-xs font-bold focus:outline-none focus:border-[#2D7D6F]"
+                                                    placeholder="Item (e.g. Lab Fee)"
+                                                    value={item.description}
+                                                    onChange={e => updateItem(index, 'description', e.target.value)}
+                                                    required
+                                                />
+                                                <div className="relative w-28">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-[#A0AEC0] font-black">$</span>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-xl pl-6 pr-3 py-3 text-xs font-black focus:outline-none focus:border-[#2D7D6F]"
+                                                        placeholder="0.00"
+                                                        value={item.amount}
+                                                        onChange={e => updateItem(index, 'amount', e.target.value)}
+                                                        required
+                                                    />
+                                                </div>
+                                                {formData.items.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeItem(index)}
+                                                        className="text-red-400 hover:text-red-600 transition-colors px-1"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
+
+                                <div className="bg-[#1A202C] p-6 rounded-3xl text-white flex justify-between items-center">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#2D7D6F]">Total Invoice Amount</p>
+                                    <p className="text-2xl font-black tracking-tighter">
+                                        ${formData.items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toLocaleString()}
+                                    </p>
+                                </div>
+
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em] ml-2">Service Description</label>
+                                    <label className="text-[10px] font-black text-[#A0AEC0] uppercase tracking-[0.2em] ml-2">Operational Notes</label>
                                     <textarea
                                         className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl px-6 py-4 text-[#1A202C] font-bold focus:outline-none focus:border-[#2D7D6F] transition-all shadow-sm"
-                                        rows="3"
-                                        placeholder="Itemized clinical services provided..."
+                                        rows="2"
+                                        placeholder="Internal memo regarding this issuance..."
                                         value={formData.description}
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                                     ></textarea>
                                 </div>
-                                <div className="flex gap-4 pt-6">
+
+                                <div className="flex gap-4 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 py-5 bg-[#F8FBFA] text-[#1A202C] border border-[#E2E8F0] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white transition-colors"
+                                        className="flex-1 py-4 bg-[#F8FBFA] text-[#1A202C] border border-[#E2E8F0] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white transition-colors"
                                     >
                                         Abort
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-5 bg-[#1A202C] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#2D3748] transition-all shadow-2xl"
+                                        className="flex-1 py-4 bg-[#2D7D6F] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#246A5E] transition-all shadow-xl shadow-[#2D7D6F]/20"
                                     >
                                         Finalize Issuance
                                     </button>

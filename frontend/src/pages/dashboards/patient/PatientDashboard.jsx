@@ -9,6 +9,7 @@ import AccessControl from './AccessControl';
 import PatientProfile from './PatientProfile';
 import ReserveSession from './ReserveSession';
 import PatientDoctors from './PatientDoctors';
+import PatientBilling from './PatientBilling';
 import {
     Home,
     FileText,
@@ -17,7 +18,8 @@ import {
     ShieldCheck,
     UserCircle,
     CalendarPlus,
-    Users
+    Users,
+    CreditCard
 } from 'lucide-react';
 
 const patientLinks = [
@@ -26,6 +28,7 @@ const patientLinks = [
     { to: '/dashboard/patient/doctors', label: 'My Doctors', icon: Users },
     { to: '/dashboard/patient/reserve', label: 'Reserve Session', icon: CalendarPlus },
     { to: '/dashboard/patient/appointments', label: 'Appointments', icon: Calendar },
+    { to: '/dashboard/patient/billing', label: 'Billing & Payments', icon: CreditCard },
     { to: '/dashboard/patient/ai', label: 'AI Health Assistant', icon: MessageSquare },
     { to: '/dashboard/patient/access', label: 'Privacy & Access', icon: ShieldCheck },
     { to: '/dashboard/patient/profile', label: 'My Profile', icon: UserCircle },
@@ -39,6 +42,7 @@ const PatientDashboard = () => {
                 <Route path="records" element={<PatientRecords />} />
                 <Route path="doctors" element={<PatientDoctors />} />
                 <Route path="appointments" element={<PatientAppointments />} />
+                <Route path="billing" element={<PatientBilling />} />
                 <Route path="ai" element={<AIHealthAssistant />} />
                 <Route path="access" element={<AccessControl />} />
                 <Route path="profile" element={<PatientProfile />} />

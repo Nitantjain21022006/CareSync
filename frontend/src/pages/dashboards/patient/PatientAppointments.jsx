@@ -54,8 +54,10 @@ const PatientAppointments = () => {
     };
 
     const getStatusStyles = (status) => {
+        if (['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(status)) {
+            return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+        }
         switch (status) {
-            case 'confirmed': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
             case 'pending': return 'bg-emerald-50/50 text-emerald-600 border-emerald-100/50';
             case 'cancelled': return 'bg-rose-50 text-rose-600 border-rose-100';
             default: return 'bg-slate-50 text-slate-600 border-slate-100';
@@ -121,7 +123,7 @@ const PatientAppointments = () => {
                                     </div>
 
                                     <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                                        {appt.status === 'confirmed' ? (
+                                        {['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) ? (
                                             <>
                                                 <button
                                                     onClick={() => window.location.href = `/consultation/voice/${appt._id}`}
@@ -144,7 +146,7 @@ const PatientAppointments = () => {
                                             </button>
                                         )}
                                         <button className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md">
-                                            {appt.status === 'confirmed' ? 'Join Session' : 'Details'}
+                                            {['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) ? 'Join Session' : 'Details'}
                                         </button>
                                     </div>
                                 </motion.div>

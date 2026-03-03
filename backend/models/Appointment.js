@@ -21,9 +21,11 @@ const appointmentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'cancelled', 'completed'],
+        enum: ['pending', 'scheduled', 'checked-in', 'waiting', 'in-progress', 'completed', 'billed', 'paid', 'cancelled', 'no-show'],
         default: 'pending'
     },
+    checkInTime: Date,
+    roomAllocation: String,
     reason: String,
     notes: String,
     mlPrediction: {
@@ -45,7 +47,11 @@ const appointmentSchema = new mongoose.Schema({
     },
     duration: Number, // in minutes
     prescriptionUrl: String,
-    consultationNotes: String
+    consultationNotes: String,
+    payEnable: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });

@@ -69,6 +69,7 @@ const PatientOverview = () => {
     const [stats, setStats] = useState({ upcoming: 0, reports: 0, prescriptions: 0 });
     const [appointments, setAppointments] = useState([]);
     const [doctors, setDoctors] = useState([]);
+    const [pendingBills, setPendingBills] = useState([]);
     const [availableDoctors, setAvailableDoctors] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
@@ -85,15 +86,18 @@ const PatientOverview = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const [apptsRes, recordsRes] = await Promise.all([
+            const [apptsRes, recordsRes, billsRes] = await Promise.all([
                 api.get('/appointments/patient/upcoming'),
-                api.get('/records/patient/me')
+                api.get('/records/patient/me'),
+                api.get('/billing/patient')
             ]);
 
             const records = recordsRes.data.data || [];
             const prescriptionsCount = records.filter(r => r.recordType === 'prescription').length;
 
             setAppointments(apptsRes.data.data || []);
+            const allBills = billsRes.data.data || [];
+            setPendingBills(allBills.filter(b => b.status === 'pending'));
             setStats({
                 upcoming: apptsRes.data.count || 0,
                 reports: records.length,
@@ -212,6 +216,40 @@ const PatientOverview = () => {
                     color="bg-emerald-500 text-emerald-600"
                 />
             </div>
+
+            {/* Outstanding Payments Section */}
+            {pendingBills.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-3xl p-8 shadow-sm relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/20 rounded-full blur-3xl -mr-16 -mt-16" />
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                        <div className="flex items-center gap-5">
+                            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-inner">
+                                <Activity className="h-8 w-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Outstanding Payments</h3>
+                                <p className="text-sm text-slate-500 font-bold mt-1">
+                                    You have {pendingBills.length} pending {pendingBills.length === 1 ? 'invoice' : 'invoices'} totaling
+                                    <span className="text-orange-600 ml-1 font-black underline decoration-orange-300 underline-offset-4">
+                                        ${pendingBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0).toFixed(2)}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            to="/dashboard/patient/billing"
+                            className="w-full md:w-auto px-8 py-4 bg-orange-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 flex items-center justify-center gap-3 active:scale-95"
+                        >
+                            Settle Balance
+                            <ArrowUpRight size={18} />
+                        </Link>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Practitioner Requests */}
             {creationRequests.length > 0 && (

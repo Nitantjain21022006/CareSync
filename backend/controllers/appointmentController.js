@@ -12,7 +12,7 @@ export const getPatientUpcomingAppointments = async (req, res) => {
 
         const appointments = await Appointment.find({
             patient: req.user.id,
-            status: { $in: ['pending', 'confirmed'] },
+            status: { $in: ['pending', 'confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'] },
             date: { $gte: today }
         }).populate('doctor', 'fullName email metadata');
 

@@ -14,9 +14,11 @@ import authRoutes from './routes/authRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import recordRoutes from './routes/recordRoutes.js';
 import billingRoutes from './routes/billingRoutes.js';
+import { stripeWebhook } from './controllers/billingController.js';
 import adminRoutes from './routes/adminRoutes.js';
 import mlRoutes from './routes/mlRoutes.js';
 import consultationRoutes from './routes/consultation.js';
+import staffRoutes from './routes/staffRoutes.js';
 import redis from './config/redis.js';
 
 // Connect DBs
@@ -40,8 +42,8 @@ app.use(cors({
 // Logging
 app.use(morgan('dev'));
 
-// Stripe webhook (raw body only for this route)
-app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+// 1. Stripe webhook (MUST be before express.json() and at the specific root path)
+app.post('/api/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 // Body parsers
 app.use(express.json());
@@ -111,6 +113,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ml', mlRoutes);
 app.use('/api/consultation', consultationRoutes);
+app.use('/api/staff', staffRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

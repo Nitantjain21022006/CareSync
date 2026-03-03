@@ -23,6 +23,42 @@ export const createPaymentIntent = async (amount, currency = 'usd', metadata = {
 };
 
 /**
+ * @desc Create a Checkout Session for billing
+ * @param {Object} bill - The bill object
+ * @param {string} successUrl - URL to redirect on success
+ * @param {string} cancelUrl - URL to redirect on cancel
+ */
+export const createCheckoutSession = async (bill, successUrl, cancelUrl) => {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: bill.items.map(item => ({
+                price_data: {
+                    currency: bill.currency || 'usd',
+                    product_data: {
+                        name: item.description,
+                    },
+                    unit_amount: Math.round(item.amount * 100), // in cents
+                },
+                quantity: 1,
+            })),
+            mode: 'payment',
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+            metadata: {
+                billId: bill._id.toString(),
+                patientId: bill.patient.toString(),
+                invoiceId: bill.invoiceId
+            }
+        });
+        return session;
+    } catch (error) {
+        console.error('Stripe Checkout Error:', error.message);
+        throw new Error('Stripe Checkout Session creation failed');
+    }
+};
+
+/**
  * @desc Verify Stripe webhook signature
  * @param {Buffer} payload - Raw request body
  * @param {string} sig - Stripe signature header

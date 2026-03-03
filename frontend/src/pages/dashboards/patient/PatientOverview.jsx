@@ -235,7 +235,7 @@ const PatientOverview = () => {
                                 <p className="text-sm text-slate-500 font-bold mt-1">
                                     You have {pendingBills.length} pending {pendingBills.length === 1 ? 'invoice' : 'invoices'} totaling
                                     <span className="text-orange-600 ml-1 font-black underline decoration-orange-300 underline-offset-4">
-                                        ${pendingBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0).toFixed(2)}
+                                        ₹{pendingBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0).toFixed(2)}
                                     </span>
                                 </p>
                             </div>

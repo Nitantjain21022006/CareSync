@@ -128,7 +128,7 @@ const BillingManagement = () => {
                 <div className="bg-white border border-[#E2E8F0] p-8 rounded-[2.5rem] shadow-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -z-0"></div>
                     <p className="text-[#A0AEC0] text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Realized Revenue</p>
-                    <h3 className="text-3xl font-black text-[#1A202C] tracking-tighter relative z-10">${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-3xl font-black text-[#1A202C] tracking-tighter relative z-10">₹{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
                     <div className="mt-4 flex items-center gap-2 text-emerald-600 text-[10px] font-black uppercase tracking-widest bg-emerald-50 w-fit px-3 py-1 rounded-lg">
                         <ArrowUpRight size={12} /> 12.5% vs Last Month
                     </div>
@@ -136,13 +136,13 @@ const BillingManagement = () => {
                 <div className="bg-white border border-[#E2E8F0] p-8 rounded-[2.5rem] shadow-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -z-0"></div>
                     <p className="text-[#A0AEC0] text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Outstanding Balance</p>
-                    <h3 className="text-3xl font-black text-amber-500 tracking-tighter relative z-10">${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-3xl font-black text-amber-500 tracking-tighter relative z-10">₹{pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
                     <p className="mt-4 text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest">{bills.filter(b => b.status === 'pending').length} Active Invoices</p>
                 </div>
                 <div className="bg-[#1A202C] p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group text-white">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#2D7D6F]/20 rounded-bl-full -z-0"></div>
                     <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Projected Yield</p>
-                    <h3 className="text-3xl font-black tracking-tighter relative z-10">${(totalRevenue + pendingRevenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-3xl font-black tracking-tighter relative z-10">₹{(totalRevenue + pendingRevenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
                     <div className="mt-4 flex items-center gap-2 text-[#2D7D6F] text-[10px] font-black uppercase tracking-widest bg-white/5 w-fit px-3 py-1 rounded-lg border border-white/10">
                         <TrendingUp size={12} /> Institutional Target Meta
                     </div>
@@ -210,7 +210,7 @@ const BillingManagement = () => {
                                             </div>
                                         </td>
                                         <td className="px-10 py-8">
-                                            <p className="text-md font-black text-[#1A202C] tracking-tighter">${(bill.totalAmount || bill.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                            <p className="text-md font-black text-[#1A202C] tracking-tighter">₹{(bill.totalAmount || bill.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                         </td>
                                         <td className="px-10 py-8">
                                             <p className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest">{new Date(bill.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
@@ -308,7 +308,7 @@ const BillingManagement = () => {
                                                     required
                                                 />
                                                 <div className="relative w-28">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-[#A0AEC0] font-black">$</span>
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-[#A0AEC0] font-black">₹</span>
                                                     <input
                                                         type="number"
                                                         className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-xl pl-6 pr-3 py-3 text-xs font-black focus:outline-none focus:border-[#2D7D6F]"
@@ -335,7 +335,7 @@ const BillingManagement = () => {
                                 <div className="bg-[#1A202C] p-6 rounded-3xl text-white flex justify-between items-center">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-[#2D7D6F]">Total Invoice Amount</p>
                                     <p className="text-2xl font-black tracking-tighter">
-                                        ${formData.items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toLocaleString()}
+                                        ₹{formData.items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toLocaleString()}
                                     </p>
                                 </div>
 

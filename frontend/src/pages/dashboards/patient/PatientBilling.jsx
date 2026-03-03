@@ -123,7 +123,7 @@ const PatientBilling = () => {
                                         <p className="text-sm text-gray-500">Date: {new Date(bill.createdAt).toLocaleDateString()}</p>
                                     </div>
                                     <div className="flex flex-col items-center md:items-end gap-2 text-center md:text-right">
-                                        <p className="text-2xl font-bold text-gray-900">${(bill.totalAmount || 0).toFixed(2)}</p>
+                                        <p className="text-2xl font-bold text-gray-900">₹{(bill.totalAmount || 0).toFixed(2)}</p>
                                         <button
                                             onClick={() => handlePayNow(bill._id)}
                                             disabled={payingId === bill._id}
@@ -169,7 +169,7 @@ const PatientBilling = () => {
                                             <td className="py-4 text-sm text-gray-600">
                                                 {bill.appointment?.doctor?.fullName ? `Dr. ${bill.appointment.doctor.fullName}` : (bill.description || 'Clinical Services')}
                                             </td>
-                                            <td className="py-4 text-sm font-medium text-gray-900">${(bill.totalAmount || 0).toFixed(2)}</td>
+                                            <td className="py-4 text-sm font-medium text-gray-900">₹{(bill.totalAmount || 0).toFixed(2)}</td>
                                             <td className="py-4 text-right">
                                                 <button
                                                     onClick={() => handleDownloadPdf(bill)}

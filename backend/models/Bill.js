@@ -25,7 +25,7 @@ const billSchema = new mongoose.Schema({
     }],
     currency: {
         type: String,
-        default: 'usd'
+        default: 'inr'
     },
     status: {
         type: String,

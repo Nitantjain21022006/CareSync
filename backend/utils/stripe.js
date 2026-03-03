@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
  * @param {string} currency - Currency code (e.g., 'usd')
  * @param {Object} metadata - Optional metadata (e.g., billId, patientId)
  */
-export const createPaymentIntent = async (amount, currency = 'usd', metadata = {}) => {
+export const createPaymentIntent = async (amount, currency = 'inr', metadata = {}) => {
     try {
         const paymentIntent = await stripe.paymentIntents.create({
             amount,
@@ -34,7 +34,7 @@ export const createCheckoutSession = async (bill, successUrl, cancelUrl) => {
             payment_method_types: ['card'],
             line_items: bill.items.map(item => ({
                 price_data: {
-                    currency: bill.currency || 'usd',
+                    currency: bill.currency || 'inr',
                     product_data: {
                         name: item.description,
                     },

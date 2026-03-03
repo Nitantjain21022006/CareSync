@@ -102,7 +102,7 @@ const StaffOverview = () => {
                 />
                 <StatCard
                     title="Revenue Flow"
-                    value={`$${(stats.revenueToday || 0).toLocaleString()}`}
+                    value={`₹${(stats.revenueToday || 0).toLocaleString()}`}
                     subValue="Paid Today"
                     icon={CreditCard}
                     color="bg-emerald-600 text-emerald-600"

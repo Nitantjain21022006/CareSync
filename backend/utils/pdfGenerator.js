@@ -46,21 +46,21 @@ export const generateReceiptPDF = (bill, appointment) => {
             // 4. Billing Table Header
             const tableTop = 330;
             doc.fontSize(10).fillColor('#A0AEC0').text('Description', 50, tableTop);
-            doc.text('Amount (USD)', 400, tableTop, { align: 'right' });
+            doc.text('Amount (INR)', 400, tableTop, { align: 'right' });
             doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
             // 5. Billing Items
             let currentY = tableTop + 25;
             bill.items.forEach(item => {
                 doc.fillColor('#1A202C').text(item.description, 50, currentY);
-                doc.text(`$${item.amount.toFixed(2)}`, 400, currentY, { align: 'right' });
+                doc.text(`INR ${item.amount.toFixed(2)}`, 400, currentY, { align: 'right' });
                 currentY += 20;
             });
 
             // 6. Total
             doc.moveTo(50, currentY).lineTo(550, currentY).stroke();
             doc.fontSize(14).fillColor('#2D7D6F').text('TOTAL AMOUNT PAID', 50, currentY + 15);
-            doc.text(`$${bill.totalAmount.toFixed(2)}`, 400, currentY + 15, { align: 'right' });
+            doc.text(`INR ${bill.totalAmount.toFixed(2)}`, 400, currentY + 15, { align: 'right' });
 
             // 7. Footer
             doc.fontSize(8).fillColor('#A0AEC0').text(

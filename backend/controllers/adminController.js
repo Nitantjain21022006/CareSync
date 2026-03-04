@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Appointment from '../models/Appointment.js';
 import Bill from '../models/Bill.js';
 import AuthLog from '../models/AuthLog.js';
+import { generateAdminReportPDF } from '../utils/pdfGenerator.js';
 
 // @desc    Get system-wide stats for admin dashboard
 // @route   GET /api/admin/stats
@@ -59,28 +60,39 @@ export const getHealthcareAnalytics = async (req, res) => {
     try {
         const { period = 'weekly' } = req.query;
         const now = new Date();
-        let startDate = new Date();
 
-        if (period === 'daily') {
-            startDate.setHours(0, 0, 0, 0);
+        let startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        let startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        let revenueData;
+
+        if (period === 'weekly') {
+            revenueData = await Bill.aggregate([
+                { $match: { status: 'paid', createdAt: { $gte: startOfWeek } } },
+                {
+                    $group: {
+                        _id: { $dayOfWeek: "$createdAt" },
+                        amount: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ]);
         } else {
-            // Default to weekly
-            startDate.setDate(now.getDate() - 7);
+            revenueData = await Bill.aggregate([
+                { $match: { status: 'paid', createdAt: { $gte: startOfDay } } },
+                {
+                    $group: {
+                        _id: { $hour: { date: "$createdAt", timezone: "+05:30" } },
+                        amount: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ]);
         }
-
-        // 1. Revenue Analytics (Daily/Weekly)
-        const revenueData = await Bill.aggregate([
-            { $match: { status: 'paid', paidDate: { $gte: startDate } } },
-            {
-                $group: {
-                    _id: period === 'daily'
-                        ? { $hour: '$paidDate' }
-                        : { $dayOfWeek: '$paidDate' },
-                    amount: { $sum: '$totalAmount' }
-                }
-            },
-            { $sort: { '_id': 1 } }
-        ]);
 
         // 2. Case Status Distribution
         const caseData = await Appointment.aggregate([
@@ -97,7 +109,7 @@ export const getHealthcareAnalytics = async (req, res) => {
                 $group: {
                     _id: {
                         $cond: {
-                            if: { $eq: ["$status", "completed"] },
+                            if: { $in: ["$status", ["completed", "billed", "paid"]] },
                             then: "successful",
                             else: {
                                 $cond: {
@@ -136,6 +148,87 @@ export const getHealthcareAnalytics = async (req, res) => {
         });
     } catch (err) {
         console.error('Get analytics error:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Download comprehensive institutional report
+// @route   GET /api/admin/report/comprehensive
+// @access  Private (Admin)
+export const downloadComprehensiveReport = async (req, res) => {
+    try {
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        // 1. Gather same data as analytics (Weekly context for comprehensive report)
+        const revenueData = await Bill.aggregate([
+            { $match: { status: 'paid', createdAt: { $gte: startOfWeek } } },
+            {
+                $group: {
+                    _id: { $dayOfWeek: "$createdAt" },
+                    amount: { $sum: "$totalAmount" }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        const caseData = await Appointment.aggregate([
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+
+        const outcomeData = await Appointment.aggregate([
+            {
+                $group: {
+                    _id: {
+                        $cond: {
+                            if: { $in: ["$status", ["completed", "billed", "paid"]] },
+                            then: "successful",
+                            else: {
+                                $cond: {
+                                    if: { $in: ["$status", ["cancelled", "no-show"]] },
+                                    then: "rejected",
+                                    else: "other"
+                                }
+                            }
+                        }
+                    },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const caseSummary = { active: 0, resolved: 0, cancelled: 0 };
+        caseData.forEach(item => {
+            if (['pending', 'scheduled', 'checked-in', 'waiting', 'in-progress'].includes(item._id)) caseSummary.active += item.count;
+            else if (['completed', 'billed', 'paid'].includes(item._id)) caseSummary.resolved += item.count;
+            else if (item._id === 'cancelled') caseSummary.cancelled += item.count;
+        });
+
+        const outcomeSummary = { successful: 0, rejected: 0 };
+        outcomeData.forEach(item => {
+            if (item._id === 'successful') outcomeSummary.successful = item.count;
+            if (item._id === 'rejected') outcomeSummary.rejected = item.count;
+        });
+
+        const reportData = {
+            revenue: revenueData,
+            cases: caseSummary,
+            outcomes: outcomeSummary
+        };
+
+        const pdfBuffer = await generateAdminReportPDF(reportData);
+
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'attachment; filename=CareSync_Comprehensive_Report.pdf',
+            'Content-Length': pdfBuffer.length
+        });
+
+        res.status(200).send(pdfBuffer);
+    } catch (err) {
+        console.error('Download report error:', err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };

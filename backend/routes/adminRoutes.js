@@ -8,7 +8,8 @@ import {
     getHealthcareAnalytics,
     provisionUser,
     updateUserStatus,
-    deleteUser
+    deleteUser,
+    downloadComprehensiveReport
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -19,6 +20,7 @@ router.use(authorize('admin'));
 
 router.get('/stats', getSystemStats);
 router.get('/analytics', getHealthcareAnalytics);
+router.get('/report/comprehensive', downloadComprehensiveReport);
 router.get('/verifications/pending', getPendingVerifications);
 router.put('/verify/:id', verifyDoctor);
 router.get('/users', getAllUsers);

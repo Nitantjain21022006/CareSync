@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../config/api';
+import { useNavigate } from 'react-router-dom';
 import {
     Activity,
     ShieldCheck,
@@ -13,7 +14,8 @@ import {
     UserPlus,
     CheckCircle2,
     XCircle,
-    ArrowRight
+    ArrowRight,
+    DollarSign
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -36,13 +38,16 @@ const StatCard = ({ title, value, subValue, icon: Icon, color }) => (
 );
 
 const AdminOverview = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalDoctors: 0,
         totalPatients: 0,
         totalStaff: 0,
         appointmentCount: 0,
+        totalRevenue: 0,
         departments: 8,
-        systemUptime: '99.98%'
+        systemUptime: '99.98%',
+        recentEvents: []
     });
     const [pendingDoctors, setPendingDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -74,6 +79,18 @@ const AdminOverview = () => {
         }
     };
 
+    const formatCurrency = (val) => {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+    };
+
+    const getEventIcon = (type) => {
+        switch (type) {
+            case 'signup': return UserPlus;
+            case 'login': return ShieldCheck;
+            default: return Activity;
+        }
+    };
+
     return (
         <div className="space-y-8 pb-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -101,22 +118,22 @@ const AdminOverview = () => {
                 <StatCard
                     title="Verified Doctors"
                     value={stats.totalDoctors}
-                    subValue="+5 new applications"
+                    subValue="Healthcare provision"
                     icon={ShieldCheck}
                     color="bg-emerald-500"
                 />
                 <StatCard
                     title="Active Patients"
                     value={stats.totalPatients >= 1000 ? `${(stats.totalPatients / 1000).toFixed(1)}k` : stats.totalPatients}
-                    subValue="+82 this month"
+                    subValue="Institutional population"
                     icon={Users}
                     color="bg-emerald-700"
                 />
                 <StatCard
-                    title="Hospital Staff"
-                    value={stats.totalStaff}
-                    subValue="Core personnel"
-                    icon={Building2}
+                    title="Total Revenue"
+                    value={formatCurrency(stats.totalRevenue)}
+                    subValue="Fiscal performance"
+                    icon={DollarSign}
                     color="bg-purple-500"
                 />
                 <StatCard
@@ -136,7 +153,9 @@ const AdminOverview = () => {
                             <h3 className="text-xl font-black text-[#1A202C] tracking-tight">Pending Verifications</h3>
                             <p className="text-xs text-[#A0AEC0] font-bold">Credentials review required</p>
                         </div>
-                        <button className="text-[#2D7D6F] text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                        <button
+                            onClick={() => navigate('/dashboard/admin/users')}
+                            className="text-[#2D7D6F] text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
                             Review Queue <ChevronRight size={14} />
                         </button>
                     </div>
@@ -145,7 +164,7 @@ const AdminOverview = () => {
                         {loading ? (
                             <div className="h-20 bg-[#F8FBFA] animate-pulse rounded-[1.5rem]"></div>
                         ) : pendingDoctors.length > 0 ? (
-                            pendingDoctors.map(doctor => (
+                            pendingDoctors.slice(0, 3).map(doctor => (
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -195,21 +214,28 @@ const AdminOverview = () => {
                             <span className="text-[10px] bg-white/10 px-3 py-1 rounded-full">Live</span>
                         </h3>
                         <div className="space-y-6 relative z-10">
-                            {[
-                                { icon: UserPlus, text: 'New Patient Registration', time: '2m ago', color: 'text-emerald-400' },
-                                { icon: Video, text: 'Tele-consultation Started', time: '5m ago', color: 'text-emerald-600' },
-                                { icon: ShieldCheck, text: 'Doctor Verified: Dr. Smith', time: '12m ago', color: 'text-emerald-400' }
-                            ].map((event, i) => (
-                                <div key={i} className="flex gap-4 group cursor-pointer">
-                                    <div className="mt-1"><event.icon className={`h-4 w-4 ${event.color}`} /></div>
-                                    <div>
-                                        <p className="text-xs font-bold leading-tight group-hover:text-[#2D7D6F] transition-colors">{event.text}</p>
-                                        <p className="text-[10px] text-white/40 font-black uppercase mt-1 tracking-widest">{event.time}</p>
+                            {stats.recentEvents?.length > 0 ? stats.recentEvents.slice(0, 4).map((event, i) => {
+                                const Icon = getEventIcon(event.eventType);
+                                return (
+                                    <div key={i} className="flex gap-4 group cursor-pointer">
+                                        <div className="mt-1"><Icon className={`h-4 w-4 ${event.eventType === 'signup' ? 'text-emerald-400' : 'text-emerald-600'}`} /></div>
+                                        <div>
+                                            <p className="text-xs font-bold leading-tight group-hover:text-[#2D7D6F] transition-colors">
+                                                {event.userId?.fullName || 'Anonymous'} - {event.eventType === 'signup' ? 'Registered' : 'Logged In'}
+                                            </p>
+                                            <p className="text-[10px] text-white/40 font-black uppercase mt-1 tracking-widest">
+                                                {new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            }) : (
+                                <p className="text-xs text-white/40 font-bold">No recent events tracked.</p>
+                            )}
                         </div>
-                        <button className="w-full mt-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
+                        <button
+                            onClick={() => navigate('/dashboard/admin/logs')}
+                            className="w-full mt-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
                             View Security Audit
                         </button>
                     </div>
@@ -219,12 +245,15 @@ const AdminOverview = () => {
                         <h3 className="text-lg font-black text-[#1A202C] mb-6">Quick Governance</h3>
                         <div className="grid grid-cols-2 gap-4">
                             {[
-                                { label: 'Audit Logs', color: 'bg-emerald-100' },
-                                { label: 'Compliance', color: 'bg-amber-50' },
-                                { label: 'Reports', color: 'bg-emerald-50' },
-                                { label: 'Config', color: 'bg-purple-50' }
+                                { label: 'Audit Logs', color: 'bg-emerald-100', path: '/dashboard/admin/logs' },
+                                { label: 'Healthcare', color: 'bg-amber-50', path: '/dashboard/admin/analytics' },
+                                { label: 'Users', color: 'bg-emerald-50', path: '/dashboard/admin/users' },
+                                { label: 'Overview', color: 'bg-purple-50', path: '/dashboard/admin' }
                             ].map((item, i) => (
-                                <button key={i} className={`p-4 ${item.color} rounded-2xl text-center group transition-all border border-transparent hover:border-[#E2E8F0]`}>
+                                <button
+                                    key={i}
+                                    onClick={() => navigate(item.path)}
+                                    className={`p-4 ${item.color} rounded-2xl text-center group transition-all border border-transparent hover:border-[#E2E8F0]`}>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-[#1A202C]">{item.label}</p>
                                 </button>
                             ))}

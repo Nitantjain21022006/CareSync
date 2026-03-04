@@ -14,7 +14,12 @@ import {
     Settings,
     X,
     ArrowUpRight,
-    UserPlus
+    UserPlus,
+    ChevronLeft,
+    ChevronRight,
+    Trash2,
+    Ban,
+    CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../config/api';
@@ -26,14 +31,42 @@ const UserManagement = () => {
     const [roleFilter, setRoleFilter] = useState('all');
     const [message, setMessage] = useState({ type: '', text: '' });
 
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+
+    // Provision Modal State
+    const [showProvisionModal, setShowProvisionModal] = useState(false);
+    const [provisionForm, setProvisionForm] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        role: 'hospital_staff',
+        phone: ''
+    });
+
+    // Action Menu State
+    const [activeActionMenu, setActiveActionMenu] = useState(null);
+
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [page, roleFilter, searchTerm]);
 
     const fetchUsers = async () => {
+        setLoading(true);
         try {
-            const res = await api.get('/admin/users');
+            const res = await api.get('/admin/users', {
+                params: {
+                    page,
+                    limit: 8,
+                    role: roleFilter,
+                    searchTerm
+                }
+            });
             setUsers(res.data.data || []);
+            setTotalPages(res.data.pagination.totalPages);
+            setTotalUsers(res.data.total);
         } catch (err) {
             console.error('Error fetching users');
             setMessage({ type: 'error', text: 'Institutional data access failure.' });
@@ -53,12 +86,44 @@ const UserManagement = () => {
         }
     };
 
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
-    });
+    const handleToggleStatus = async (userId, currentStatus) => {
+        try {
+            await api.put(`/admin/users/${userId}/status`, { isActive: !currentStatus });
+            setMessage({ type: 'success', text: `User status updated successfully.` });
+            fetchUsers();
+            setActiveActionMenu(null);
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Status update failed.' });
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+        try {
+            await api.delete(`/admin/users/${userId}`);
+            setMessage({ type: 'success', text: `Identity purged from system.` });
+            fetchUsers();
+            setActiveActionMenu(null);
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Purge operation failed.' });
+        }
+    };
+
+    const handleProvision = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/admin/users/provision', provisionForm);
+            setMessage({ type: 'success', text: `New identity provisioned successfully.` });
+            setShowProvisionModal(false);
+            setProvisionForm({ fullName: '', email: '', password: '', role: 'hospital_staff', phone: '' });
+            fetchUsers();
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.error || 'Provisioning failed.' });
+        }
+    };
 
     return (
         <div className="space-y-8 pb-12">
@@ -69,7 +134,9 @@ const UserManagement = () => {
                     </h1>
                     <p className="text-[#a0aec0] font-bold text-sm tracking-tight mt-1">Institutional oversight and professional credentialing.</p>
                 </div>
-                <button className="flex items-center gap-3 bg-[#1A202C] text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#2D3748] transition-all shadow-xl">
+                <button
+                    onClick={() => setShowProvisionModal(true)}
+                    className="flex items-center gap-3 bg-[#1A202C] text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#2D3748] transition-all shadow-xl">
                     <UserPlus size={16} /> provision account
                 </button>
             </div>
@@ -100,7 +167,10 @@ const UserManagement = () => {
                             placeholder="Find identity by name or digital address..."
                             className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 pl-12 pr-4 text-xs font-black text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all shadow-sm"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1);
+                            }}
                         />
                     </div>
                     <div className="flex items-center gap-4 bg-white border border-[#E2E8F0] rounded-2xl px-6 py-4 shadow-sm">
@@ -108,11 +178,15 @@ const UserManagement = () => {
                         <select
                             className="bg-transparent border-none text-[#1A202C] text-[10px] font-black uppercase tracking-widest focus:ring-0 cursor-pointer appearance-none pr-8"
                             value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
+                            onChange={(e) => {
+                                setRoleFilter(e.target.value);
+                                setPage(1);
+                            }}
                         >
                             <option value="all">Unified Population</option>
                             <option value="patient">Sectors: Patient</option>
                             <option value="doctor">Sectors: Clinician</option>
+                            <option value="hospital_staff">Sectors: Staff</option>
                             <option value="admin">Sectors: Executive</option>
                         </select>
                     </div>
@@ -138,7 +212,7 @@ const UserManagement = () => {
                                         <td className="px-10 py-8 text-right"><div className="h-10 w-10 bg-[#F8FBFA] rounded-xl ml-auto"></div></td>
                                     </tr>
                                 ))
-                            ) : filteredUsers.map((user, idx) => (
+                            ) : users.map((user, idx) => (
                                 <motion.tr
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -181,7 +255,7 @@ const UserManagement = () => {
                                         )}
                                         {user.role !== 'doctor' && <span className="text-[10px] text-[#A0AEC0] font-black uppercase tracking-widest">VERIFIED</span>}
                                     </td>
-                                    <td className="px-10 py-8 text-right">
+                                    <td className="px-10 py-8 text-right relative">
                                         <div className="flex items-center justify-end gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
                                             {user.role === 'doctor' && !user.metadata?.isVerified && (
                                                 <button
@@ -192,9 +266,29 @@ const UserManagement = () => {
                                                     <UserCheck size={16} />
                                                 </button>
                                             )}
-                                            <button className="p-3 bg-white border border-[#E2E8F0] text-[#A0AEC0] rounded-xl hover:bg-[#1A202C] hover:text-white hover:border-[#1A202C] transition-all shadow-sm">
-                                                <Settings size={16} />
-                                            </button>
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setActiveActionMenu(activeActionMenu === user._id ? null : user._id)}
+                                                    className={`p-3 rounded-xl transition-all shadow-sm ${activeActionMenu === user._id ? 'bg-[#1A202C] text-white' : 'bg-white border border-[#E2E8F0] text-[#A0AEC0] hover:bg-[#1A202C] hover:text-white'}`}>
+                                                    <Settings size={16} />
+                                                </button>
+
+                                                {activeActionMenu === user._id && (
+                                                    <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E2E8F0] rounded-2xl shadow-xl z-50 p-2 space-y-1">
+                                                        <button
+                                                            onClick={() => handleToggleStatus(user._id, user.isVerified)}
+                                                            className="w-full flex items-center gap-3 p-3 text-[10px] font-black uppercase tracking-widest text-[#1A202C] hover:bg-[#F8FBFA] rounded-xl transition-all">
+                                                            {user.isVerified ? <Ban size={14} className="text-amber-500" /> : <CheckCircle2 size={14} className="text-emerald-500" />}
+                                                            {user.isVerified ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteUser(user._id)}
+                                                            className="w-full flex items-center gap-3 p-3 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                                                            <Trash2 size={14} /> Purge Identity
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -203,7 +297,40 @@ const UserManagement = () => {
                     </table>
                 </div>
 
-                {!loading && filteredUsers.length === 0 && (
+                {/* Pagination */}
+                {!loading && users.length > 0 && (
+                    <div className="px-10 py-8 border-t border-[#F1F5F9] flex items-center justify-between bg-[#F8FBFA]/20">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#A0AEC0]">
+                            Showing <span className="text-[#1A202C]">{users.length}</span> of <span className="text-[#1A202C]">{totalUsers}</span> Identities
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-3 bg-white border border-[#E2E8F0] rounded-xl text-[#A0AEC0] disabled:opacity-30 hover:bg-[#1A202C] hover:text-white transition-all shadow-sm">
+                                <ChevronLeft size={16} />
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setPage(i + 1)}
+                                        className={`h-10 w-10 rounded-xl text-[10px] font-black transition-all ${page === i + 1 ? 'bg-[#2D7D6F] text-white shadow-lg shadow-[#2D7D6F]/20' : 'bg-white border border-[#E2E8F0] text-[#A0AEC0] hover:bg-[#F8FBFA]'}`}>
+                                        {i + 1}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="p-3 bg-white border border-[#E2E8F0] rounded-xl text-[#A0AEC0] disabled:opacity-30 hover:bg-[#1A202C] hover:text-white transition-all shadow-sm">
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {!loading && users.length === 0 && (
                     <div className="py-28 text-center bg-[#F8FBFA]/30">
                         <Users className="h-16 w-16 text-[#E2E8F0] mx-auto mb-6" />
                         <h4 className="text-xl font-black text-[#1A202C] tracking-tight">Population Missing</h4>
@@ -211,6 +338,95 @@ const UserManagement = () => {
                     </div>
                 )}
             </div>
+
+            {/* Provision Modal */}
+            <AnimatePresence>
+                {showProvisionModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#1A202C]/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white rounded-[3rem] w-full max-w-xl overflow-hidden shadow-2xl">
+                            <div className="p-10 border-b border-[#F1F5F9] flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-2xl font-black text-[#1A202C] tracking-tighter">Identity Provisioning</h3>
+                                    <p className="text-[#A0AEC0] text-xs font-bold font-sans">Initialize new institutional credentials.</p>
+                                </div>
+                                <button onClick={() => setShowProvisionModal(false)} className="p-3 bg-[#F8FBFA] rounded-2xl hover:bg-neutral-100 transition-all">
+                                    <X size={20} className="text-[#1A202C]" />
+                                </button>
+                            </div>
+                            <form onSubmit={handleProvision} className="p-10 space-y-6">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#A0AEC0] ml-1">Full Name</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 px-6 text-xs font-bold text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all"
+                                            placeholder="John Doe"
+                                            value={provisionForm.fullName}
+                                            onChange={e => setProvisionForm({ ...provisionForm, fullName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#A0AEC0] ml-1">Functional Role</label>
+                                        <select
+                                            className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 px-6 text-xs font-bold text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all appearance-none"
+                                            value={provisionForm.role}
+                                            onChange={e => setProvisionForm({ ...provisionForm, role: e.target.value })}
+                                        >
+                                            <option value="hospital_staff">Hospital Staff</option>
+                                            <option value="doctor">Clinician (Doctor)</option>
+                                            <option value="admin">Executive (Admin)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#A0AEC0] ml-1">Digital Address (Email)</label>
+                                    <input
+                                        required
+                                        type="email"
+                                        className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 px-6 text-xs font-bold text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all"
+                                        placeholder="user@caresync.com"
+                                        value={provisionForm.email}
+                                        onChange={e => setProvisionForm({ ...provisionForm, email: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#A0AEC0] ml-1">Access Credentials</label>
+                                        <input
+                                            required
+                                            type="password"
+                                            className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 px-6 text-xs font-bold text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all"
+                                            placeholder="••••••••"
+                                            value={provisionForm.password}
+                                            onChange={e => setProvisionForm({ ...provisionForm, password: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#A0AEC0] ml-1">Mobile Contact</label>
+                                        <input
+                                            type="text"
+                                            className="w-full bg-[#F8FBFA] border border-[#E2E8F0] rounded-2xl py-4 px-6 text-xs font-bold text-[#1A202C] focus:outline-none focus:border-[#2D7D6F] transition-all"
+                                            placeholder="+91 00000 00000"
+                                            value={provisionForm.phone}
+                                            onChange={e => setProvisionForm({ ...provisionForm, phone: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="w-full bg-[#1A202C] text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#2D3748] transition-all shadow-xl shadow-[#1A202C]/10">
+                                    Confirm Provisioning
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

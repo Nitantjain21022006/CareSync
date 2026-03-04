@@ -27,53 +27,80 @@ const AccessControl = () => {
     const [creationRequests, setCreationRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [accessLogs, setAccessLogs] = useState({ accessRequests: [], creationRequests: [] });
+    const [accessLogs, setAccessLogs] = useState([]);
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 });
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [actionLoading, setActionLoading] = useState(null); // Track specific doctorId or requestId
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        fetchData(pagination.currentPage);
+    }, [pagination.currentPage]);
 
-    const fetchData = async () => {
+    const fetchData = async (page = 1) => {
         try {
-            const [authorizedRes, allRes, requestsRes, creationRes, logsRes] = await Promise.all([
+            // Using Settled to prevent a single failure from blocking the entire UI
+            const results = await Promise.allSettled([
                 api.get('/records/access/authorized'),
                 api.get('/auth/doctors'),
                 api.get('/records/patient/access-requests'),
                 api.get('/records/creation-requests/pending'),
-                api.get('/records/patient/access-logs')
+                api.get(`/records/patient/access-logs?page=${page}&limit=5`)
             ]);
-            setAuthorizedDoctors(authorizedRes.data.data || []);
-            setAllDoctors(allRes.data.data || []);
-            setPendingRequests(requestsRes.data.data || []);
-            setCreationRequests(creationRes.data.data || []);
-            setAccessLogs(logsRes.data.data || { accessRequests: [], creationRequests: [] });
+
+            const [authorizedRes, allRes, requestsRes, creationRes, logsRes] = results;
+
+            if (authorizedRes.status === 'fulfilled') setAuthorizedDoctors(authorizedRes.value.data.data || []);
+            if (allRes.status === 'fulfilled') setAllDoctors(allRes.value.data.data || []);
+            if (requestsRes.status === 'fulfilled') setPendingRequests(requestsRes.value.data.data || []);
+            if (creationRes.status === 'fulfilled') setCreationRequests(creationRes.value.data.data || []);
+
+            if (logsRes.status === 'fulfilled') {
+                setAccessLogs(logsRes.value.data.data || []);
+                setPagination(logsRes.value.data.pagination || { currentPage: 1, totalPages: 1 });
+            }
+
+            // Check if any major component failed
+            const failures = [authorizedRes, allRes, requestsRes, creationRes, logsRes].filter(r => r.status === 'rejected');
+            if (failures.length > 0) {
+                console.error('Partial sync failure:', failures);
+                setMessage({
+                    type: 'error',
+                    text: `Localized sync disruption in ${failures.length} node(s). Core protocol operational.`
+                });
+            }
         } catch (err) {
-            console.error('Error fetching access data');
+            console.error('Fatal fetch error:', err);
+            setMessage({ type: 'error', text: 'Critical link failure. Re-establishing connection...' });
         } finally {
             setLoading(false);
         }
     };
 
     const handleGrantAccess = async (doctorId) => {
+        setActionLoading(doctorId);
         try {
             await api.post('/records/access/grant', { doctorId });
             setMessage({ type: 'success', text: 'Clinical authorization granted.' });
-            fetchData();
+            fetchData(pagination.currentPage);
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
         } catch (err) {
             setMessage({ type: 'error', text: 'Failed to synchronize authorization.' });
+        } finally {
+            setActionLoading(null);
         }
     };
 
     const handleRevokeAccess = async (doctorId) => {
+        setActionLoading(doctorId);
         try {
             await api.post('/records/access/revoke', { doctorId });
             setMessage({ type: 'success', text: 'Clinical authorization retracted.' });
-            fetchData();
+            fetchData(pagination.currentPage);
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
         } catch (err) {
             setMessage({ type: 'error', text: 'Failed to synchronize retraction.' });
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -81,7 +108,7 @@ const AccessControl = () => {
         try {
             await api.patch(`/records/patient/access-request/${requestId}`, { status });
             setMessage({ type: 'success', text: `Clinical request ${status} successfully.` });
-            fetchData();
+            fetchData(pagination.currentPage);
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
         } catch (err) {
             setMessage({ type: 'error', text: 'Protocol response failed.' });
@@ -92,18 +119,24 @@ const AccessControl = () => {
         try {
             await api.patch(`/records/creation-request/${requestId}`, { status });
             setMessage({ type: 'success', text: `Clinical initiation ${status} successfully.` });
-            fetchData();
+            fetchData(pagination.currentPage);
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
         } catch (err) {
             setMessage({ type: 'error', text: 'Initiation response failed.' });
         }
     };
 
-    const filteredDoctors = allDoctors.filter(doc =>
-        doc.fullName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !authorizedDoctors.some(authDoc => authDoc._id === doc._id) &&
-        !pendingRequests.some(req => req.doctor?._id === doc._id)
-    );
+    const filteredDoctors = allDoctors.filter(doc => {
+        const isSelf = doc._id === localStorage.getItem('userId'); // Shouldn't happen but good practice
+        const isAuthorized = authorizedDoctors.some(authDoc => authDoc._id === doc._id);
+        const hasPendingAccess = pendingRequests.some(req => req.doctor?._id === doc._id);
+        const hasPendingCreation = creationRequests.some(req => req.doctor?._id === doc._id);
+
+        const matchesSearch = doc.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (doc.metadata?.specialization || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+        return !isSelf && !isAuthorized && !hasPendingAccess && !hasPendingCreation && matchesSearch;
+    });
 
     return (
         <div className="space-y-8 pb-12 max-w-7xl mx-auto">
@@ -278,12 +311,17 @@ const AccessControl = () => {
                                         </div>
                                         <motion.button
                                             whileTap={{ scale: 0.95 }}
+                                            disabled={actionLoading === doc._id}
                                             onClick={() => handleRevokeAccess(doc._id)}
-                                            className="group/btn relative px-8 py-4 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border border-rose-100 shadow-sm"
+                                            className="group/btn relative px-8 py-4 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border border-rose-100 shadow-sm disabled:opacity-50"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <UserX size={16} />
-                                                TERMINATE_ACCESS
+                                                {actionLoading === doc._id ? (
+                                                    <Activity className="animate-spin h-4 w-4" />
+                                                ) : (
+                                                    <UserX size={16} />
+                                                )}
+                                                {actionLoading === doc._id ? 'SYNCHRONIZING...' : 'TERMINATE_ACCESS'}
                                             </div>
                                         </motion.button>
                                     </motion.div>
@@ -341,10 +379,15 @@ const AccessControl = () => {
                                         </div>
                                         <motion.button
                                             whileTap={{ scale: 0.9 }}
+                                            disabled={actionLoading === doc._id}
                                             onClick={() => handleGrantAccess(doc._id)}
-                                            className="p-5 bg-white text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-[20px] transition-all border border-emerald-100 shadow-sm"
+                                            className="p-5 bg-white text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-[20px] transition-all border border-emerald-100 shadow-sm disabled:opacity-50"
                                         >
-                                            <UserPlus size={20} />
+                                            {actionLoading === doc._id ? (
+                                                <Activity className="animate-spin h-5 w-5" />
+                                            ) : (
+                                                <UserPlus size={20} />
+                                            )}
                                         </motion.button>
                                     </motion.div>
                                 ))
@@ -365,51 +408,99 @@ const AccessControl = () => {
 
                 {/* Request Log History */}
                 <div className="space-y-6">
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4 ml-4">
-                        <History className="h-7 w-7 text-slate-900" />
-                        Access Protocol Log
-                    </h3>
-                    <div className="bg-white border border-slate-100 rounded-[50px] overflow-hidden shadow-xl">
-                        {[
-                            ...accessLogs.accessRequests.map(r => ({ ...r, type: 'Records Access' })),
-                            ...accessLogs.creationRequests.map(r => ({ ...r, type: 'Clinical Initiation' }))
-                        ].length > 0 ? (
-                            <div className="divide-y divide-slate-50">
-                                {[
-                                    ...accessLogs.accessRequests.map(r => ({ ...r, type: 'Records Access' })),
-                                    ...accessLogs.creationRequests.map(r => ({ ...r, type: 'Clinical Initiation' }))
-                                ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((log, idx) => (
+                    <div className="flex items-center justify-between px-4">
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-4">
+                            <History className="h-7 w-7 text-slate-900" />
+                            Access Protocol Log
+                        </h3>
+                        {pagination.totalPages > 1 && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    disabled={pagination.currentPage === 1}
+                                    onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+                                    className="p-2 rounded-xl border border-slate-100 disabled:opacity-30 hover:bg-slate-50 transition-all"
+                                >
+                                    <ChevronRight className="rotate-180" size={16} />
+                                </button>
+                                <span className="text-[10px] font-black text-slate-400 px-4">
+                                    PAGE {pagination.currentPage} / {pagination.totalPages}
+                                </span>
+                                <button
+                                    disabled={pagination.currentPage === pagination.totalPages}
+                                    onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+                                    className="p-2 rounded-xl border border-slate-100 disabled:opacity-30 hover:bg-slate-50 transition-all"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <div className="bg-white border border-slate-100 rounded-[50px] overflow-hidden shadow-xl min-h-[400px] flex flex-col">
+                        {accessLogs.length > 0 ? (
+                            <div className="divide-y divide-slate-50 flex-1">
+                                {accessLogs.map((log, idx) => (
                                     <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
                                         key={log._id}
-                                        className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                                        className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors group"
                                     >
                                         <div className="flex items-center gap-6">
-                                            <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black">
+                                            <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-slate-900 group-hover:text-white transition-all">
                                                 {log.doctor?.fullName[0]}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-3">
                                                     <p className="font-black text-slate-900 text-sm">Dr. {log.doctor?.fullName}</p>
-                                                    <span className="text-[8px] px-2 py-0.5 bg-slate-900 text-white rounded-full font-black uppercase tracking-widest">{log.type}</span>
+                                                    <span className="text-[8px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full font-black uppercase tracking-widest border border-slate-200">
+                                                        {log.type.replace('_', ' ')}
+                                                    </span>
                                                 </div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                                    {new Date(log.createdAt).toLocaleDateString()} • {log.status.toUpperCase()}
-                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                                        {new Date(log.createdAt).toLocaleDateString()} • {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                    {log.reason && (
+                                                        <span className="text-[9px] text-emerald-600 font-bold italic truncate max-w-[200px]">
+                                                            — "{log.reason}"
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border ${log.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                log.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                                    'bg-amber-50 text-amber-600 border-amber-100'
+                                        <div className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm ${['APPROVED', 'GRANTED'].includes(log.action) ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                            ['REJECTED', 'REVOKED'].includes(log.action) ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                'bg-amber-50 text-amber-600 border-amber-100'
                                             }`}>
-                                            {log.status}
+                                            {log.action}
                                         </div>
                                     </motion.div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="p-20 text-center text-slate-300 uppercase text-[10px] font-black tracking-widest">No historical logs found</div>
+                            <div className="p-32 flex flex-col items-center justify-center text-center flex-1">
+                                <History size={40} className="text-slate-100 mb-6" />
+                                <h4 className="text-xl font-black text-slate-300 tracking-tighter uppercase">No historical entries</h4>
+                                <p className="text-[10px] text-slate-200 font-black uppercase tracking-[0.2em] mt-2">Protocol initialized. Awaiting clinical events.</p>
+                            </div>
+                        )}
+
+                        {/* Mobile/Compact Pagination Style Footer */}
+                        {pagination.totalPages > 1 && (
+                            <div className="p-6 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4">Showing clinical history nodes</p>
+                                <div className="flex gap-4 mr-4">
+                                    {[...Array(pagination.totalPages)].map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setPagination(prev => ({ ...prev, currentPage: i + 1 }))}
+                                            className={`h-2 w-2 rounded-full transition-all ${pagination.currentPage === i + 1 ? 'w-8 bg-slate-900' : 'bg-slate-200 hover:bg-slate-400'
+                                                }`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

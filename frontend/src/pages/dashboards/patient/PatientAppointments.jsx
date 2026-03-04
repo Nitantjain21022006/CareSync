@@ -64,6 +64,29 @@ const PatientAppointments = () => {
         }
     };
 
+    const isCallLinkActive = (appt) => {
+        // 1. If marked completed, hide links
+        if (appt.status === 'completed' || appt.consultationStatus === 'completed') return false;
+
+        // 2. If it's more than 1 hour past the start time, hide links
+        try {
+            const [hours, minutes] = appt.timeSlot.split(':').map(Number);
+            const apptDate = new Date(appt.date);
+            const startTime = new Date(apptDate.getFullYear(), apptDate.getMonth(), apptDate.getDate(), hours, minutes);
+
+            const now = new Date();
+            const oneHourInMs = 60 * 60 * 1000;
+
+            if (now.getTime() > (startTime.getTime() + oneHourInMs)) {
+                return false;
+            }
+        } catch (e) {
+            console.error('Error calculating session expiry', e);
+        }
+
+        return true;
+    };
+
     return (
         <div className="space-y-8 pb-10 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -123,7 +146,7 @@ const PatientAppointments = () => {
                                     </div>
 
                                     <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                                        {['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) ? (
+                                        {['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) && isCallLinkActive(appt) ? (
                                             <>
                                                 <button
                                                     onClick={() => window.location.href = `/consultation/voice/${appt._id}`}
@@ -140,6 +163,10 @@ const PatientAppointments = () => {
                                                     <Video size={20} />
                                                 </button>
                                             </>
+                                        ) : ['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) ? (
+                                            <div className="px-4 py-2 bg-slate-50 rounded-lg text-[9px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100">
+                                                Session Elapsed
+                                            </div>
                                         ) : (
                                             <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
                                                 <MoreHorizontal className="h-5 w-5" />

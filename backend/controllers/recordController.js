@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import AccessRequest from '../models/AccessRequest.js';
 import DoctorPatient from '../models/DoctorPatient.js';
 import PatientCreationRequest from '../models/PatientCreationRequest.js';
+import AccessLog from '../models/AccessLog.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -122,8 +123,25 @@ export const grantAccess = async (req, res) => {
             { patient: req.user.id },
             { $addToSet: { accessibleBy: doctorId } }
         );
-        res.status(200).json({ success: true, message: 'Access granted' });
+
+        // Synchronize with DoctorPatient relationship
+        await DoctorPatient.findOneAndUpdate(
+            { doctor: doctorId, patient: req.user.id },
+            { status: 'active' },
+            { upsert: true, new: true }
+        );
+
+        // Core Audit Log
+        await AccessLog.create({
+            patient: req.user.id,
+            doctor: doctorId,
+            action: 'GRANTED',
+            type: 'RECORDS_ACCESS'
+        });
+
+        res.status(200).json({ success: true, message: 'Clinical authorization synchronized.' });
     } catch (err) {
+        console.error('Grant Access Error:', err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
@@ -134,12 +152,29 @@ export const grantAccess = async (req, res) => {
 export const revokeAccess = async (req, res) => {
     try {
         const { doctorId } = req.body;
+        // Remove from accessibleBy in all records
         await MedicalRecord.updateMany(
             { patient: req.user.id },
             { $pull: { accessibleBy: doctorId } }
         );
-        res.status(200).json({ success: true, message: 'Access revoked' });
+
+        // Deactivate DoctorPatient relationship
+        await DoctorPatient.findOneAndUpdate(
+            { doctor: doctorId, patient: req.user.id },
+            { status: 'inactive' }
+        );
+
+        // Core Audit Log
+        await AccessLog.create({
+            patient: req.user.id,
+            doctor: doctorId,
+            action: 'REVOKED',
+            type: 'RECORDS_ACCESS'
+        });
+
+        res.status(200).json({ success: true, message: 'Clinical authorization retracted.' });
     } catch (err) {
+        console.error('Revoke Access Error:', err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
@@ -237,6 +272,16 @@ export const createAccessRequest = async (req, res) => {
             patient: patientId,
             reason
         });
+
+        // Audit Log
+        await AccessLog.create({
+            patient: patientId,
+            doctor: req.user.id,
+            action: 'REQUESTED',
+            type: 'RECORDS_ACCESS',
+            reason
+        });
+
         res.status(201).json({ success: true, data: request });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Server Error' });
@@ -308,6 +353,18 @@ export const createPatientCreationRequest = async (req, res) => {
             patientFullName,
             initialNotes
         });
+
+        // Audit Log (Patient might not exist Yet, using metadata)
+        const patientUser = await User.findOne({ email: patientEmail });
+        if (patientUser) {
+            await AccessLog.create({
+                patient: patientUser._id,
+                doctor: req.user.id,
+                action: 'REQUESTED',
+                type: 'CLINICAL_INITIATION',
+                reason: initialNotes
+            });
+        }
 
         res.status(201).json({ success: true, data: request });
     } catch (err) {
@@ -504,6 +561,14 @@ export const respondToAccessRequest = async (req, res) => {
             );
         }
 
+        // Audit Log
+        await AccessLog.create({
+            patient: req.user.id,
+            doctor: request.doctor,
+            action: status === 'approved' ? 'APPROVED' : 'REJECTED',
+            type: 'RECORDS_ACCESS'
+        });
+
         res.status(200).json({ success: true, data: request });
     } catch (err) {
         console.error('Respond to Access Request Error:', err);
@@ -511,21 +576,30 @@ export const respondToAccessRequest = async (req, res) => {
     }
 };
 
-// @desc    Get all access logs for a patient (history)
+// @desc    Get all access logs for a patient (paginated)
 // @route   GET /api/records/patient/access-logs
 // @access  Private (Patient)
 export const getPatientAccessLogs = async (req, res) => {
     try {
-        const [accessRequests, creationRequests] = await Promise.all([
-            AccessRequest.find({ patient: req.user.id }).populate('doctor', 'fullName email metadata'),
-            PatientCreationRequest.find({ patientEmail: req.user.email }).populate('doctor', 'fullName email metadata')
-        ]);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+
+        const totalLogs = await AccessLog.countDocuments({ patient: req.user.id });
+        const logs = await AccessLog.find({ patient: req.user.id })
+            .populate('doctor', 'fullName email phone metadata')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
         res.status(200).json({
             success: true,
-            data: {
-                accessRequests,
-                creationRequests
+            data: logs,
+            pagination: {
+                totalLogs,
+                totalPages: Math.ceil(totalLogs / limit),
+                currentPage: page,
+                limit
             }
         });
     } catch (err) {

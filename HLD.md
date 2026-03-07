@@ -5,76 +5,79 @@ CareSync is a state-of-the-art Hospital Management System (HMS) designed to brid
 
 ## 2. High-Level System Architecture
 
-The architecture follows a decoupled pattern integrating specialized microservices and external gateways to handle clinical operations smoothly.
+The architecture follows a decoupled, layered pattern integrating specialized microservices and external gateways to handle clinical operations smoothly.
 
 ```mermaid
 graph TD
     %% Styling Definitions
-    classDef client fill:#e0f7fa,stroke:#006064,stroke-width:2px,color:#000
-    classDef gateway fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-    classDef service fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
-    classDef data fill:#ede7f6,stroke:#4a148c,stroke-width:2px,color:#000
-    classDef external fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:#000
-    classDef ai fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef user fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    classDef frontend fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#000
+    classDef backend fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#000
+    classDef external fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#000
+    classDef data fill:#F5F5F5,stroke:#424242,stroke-width:2px,color:#000
+    classDef ai fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
 
-    subgraph "Client Layer (React JS / Vite)"
-        PD[Patient Dashboard]:::client
-        DD[Doctor Dashboard]:::client
-        SD[Staff Portal]:::client
-        AD[Admin/Governance Portal]:::client
+    subgraph Users ["System Users"]
+        U1[4. System Admin]:::user
+        U2[3. Hospital Staff]:::user
+        U3[2. Doctor]:::user
+        U4[1. Patient]:::user
     end
 
-    subgraph "API Gateway & Logic Layer (Node/Express)"
-        Router[Express Gateway Router]:::gateway
-        AuthMW[Auth & Privacy Middleware]:::gateway
-        
-        subgraph "Core Service Controllers"
-            AuthC[Authentication & RBAC]:::service
-            ApptC[Appointment & Scheduling]:::service
-            RecC[Medical Records & Vault]:::service
-            ConsC[Consultation & Telehealth]:::service
-            BillC[Billing & Invoicing]:::service
-            AdminC[System Governance]:::service
-        end
+    subgraph FE ["React Frontend (Vite / SPA)"]
+        SPA[React SPA <br/>React Router, Hooks]:::frontend
+        Axios[Axios Client <br/>Interceptors, JWT Cookie]:::frontend
+        Dash[Role-based Dashboards]:::frontend
+        AuthUI[Secure Login/MFA UI]:::frontend
     end
 
-    subgraph "External Integrations"
-        Twilio[Twilio SMS/Voice API]:::external
-        Jitsi[Jitsi Meet Gateway]:::external
-        Stripe[Stripe Payment Gateway]:::external
-        Brevo[Brevo SMTP / Email]:::external
+    subgraph BE ["Node.js + Express Backend"]
+        Routes[API Routes <br/>Express 5.2]:::backend
+        AuthMW[Auth & Security Manager <br/>JWT & Session Logic]:::backend
+        ApptEng[Appointment Engine <br/>Scheduling Logic]:::backend
+        ConsEng[Consultation Engine <br/>Jitsi/Twilio Logic]:::backend
+        ML_Int[ML Integrator <br/>Inference Client]:::backend
+        Audit[Audit Logger <br/>Immutable Activity Logs]:::backend
     end
 
-    subgraph "Data Storage Ecosystem"
-        DB[(MongoDB Atlas Vault)]:::data
-        Cache[(Redis Cache Memory)]:::data
+    subgraph Ext ["External Gateways"]
+        Stripe[Stripe Gateway <br/>Payments]:::external
+        Jitsi[Jitsi Meet <br/>Video Bridge]:::external
+        Twilio[Twilio SMS/Voice <br/>OTP & Calls]:::external
+        Brevo[Brevo SMTP <br/>Email Notifications]:::external
     end
 
-    subgraph "Specialized Computation"
-        ML[Flask ML Engine - Metrics]:::ai
-        AI[Grok/Groq AI - Health Engine]:::ai
+    subgraph Data ["Data & Infrastructure"]
+        Mongo[(MongoDB Atlas <br/>Clinical Vault)]:::data
+        Redis[(Redis Cache <br/>OTP & Sessions)]:::data
+        S3[Supabase / S3 <br/>Medical Records Storage]:::data
     end
 
-    %% Client Operations
-    PD & DD & SD & AD <-->|HTTPS/REST Encrypted Payload| Router
+    subgraph AI_Layer ["AI Intelligence Layer"]
+        FlaskML[Flask ML Engine <br/>No-Show Analytics]:::ai
+        GroqAI[Groq AI <br/>Health Guidance Agent]:::ai
+    end
+
+    %% Connections
+    U1 & U2 & U3 & U4 --> SPA
+    SPA --> Dash & AuthUI
+    Dash --> Axios
+    Axios -- "REST / JSON" --> Routes
     
-    %% API Routing Tree
-    Router --> AuthMW
-    AuthMW --> AuthC & ApptC & RecC & ConsC & BillC & AdminC
+    Routes --> AuthMW
+    AuthMW --> Redis
     
-    %% Persistent State Mutators
-    AuthC & ApptC & RecC & ConsC & BillC & AdminC <--> DB
-    AuthC & ApptC <--> Cache
+    Routes --> ApptEng & ConsEng & ML_Int & Audit
     
-    %% External Gateways Subcalls
-    ConsC <-->|WebRTC Tokens & Hooks| Jitsi
-    ConsC <-->|SMS/Voice Ephemerals| Twilio
-    BillC <-->|Async Webhook Status| Stripe
-    AuthC <-->|Secure Notifications| Brevo
+    ApptEng --> Mongo
+    ConsEng --> Jitsi & Twilio
+    ML_Int --> FlaskML & GroqAI
     
-    %% Auxiliary Integrations
-    ApptC <-->|Inference Request| ML
-    PD <-->|Contextual Inference| AI
+    Routes --> Stripe
+    AuthMW --> Brevo
+    
+    Audit --> Mongo
+    ApptEng --> S3
 ```
 
 ## 3. Core Modules & Components
@@ -97,37 +100,108 @@ Integrates directly with Stripe for processing consultation fees or hospital bil
 ## 4. Database Schema Structure
 The schema is housed in MongoDB, designed for quick NoSQL aggregations and linked references.
 
+## 4. Database Schema Structure
+
+The schema is housed in MongoDB, designed for clinical data integrity and strict access control.
+
 ```mermaid
 erDiagram
-    USER ||--o{ APPOINTMENT : ""
-    USER ||--o{ MEDICAL-RECORD : ""
-    USER ||--o{ DOCTOR-PATIENT : "Privacy Shield Link"
-    USER ||--o{ BILL : "Financials"
-    USER ||--o{ ACCESS-REQUEST : "Pending Approvals"
-    
+    USER ||--o{ APPOINTMENT : "as patient/doctor"
+    USER ||--o{ MEDICAL_RECORD : "owns/creates"
+    USER ||--o{ BILL : "pays/creates"
+    USER ||--o{ ACCESS_LOG : "monitors"
+    USER ||--o{ ACCESS_REQUEST : "requests/approves"
+    USER ||--o{ DOCTOR_PATIENT : "linked as"
+    USER ||--o{ AUTH_LOG : "generates"
+    USER ||--o{ PATIENT_CREATION_REQUEST : "initiates"
+
+    APPOINTMENT ||--o| BILL : "generates"
+    MEDICAL_RECORD ||--o{ ACCESS_REQUEST : "subject of"
+
     USER {
-        ObjectId _id
-        String name
-        String email
-        String role "patient, doctor, staff, admin"
-        String passwordHash
-        Boolean mfaEnabled
-    }
-    
-    APPOINTMENT {
-        ObjectId patientId
-        ObjectId doctorId
-        Date scheduledDate
-        String status "pending, confirmed, completed"
-        String consultationType "video, in-person"
+        string _id PK
+        string email
+        string fullName
+        string role "patient, doctor, staff, admin"
+        string phone
+        string profilePhoto
+        boolean isVerified
+        datetime createdAt
+        datetime updatedAt
     }
 
-    MEDICAL-RECORD {
-        ObjectId patientId
-        ObjectId uploaderId
-        String recordType "prescription, lab_report"
-        String fileUrl
-        Object biometrics "BP, HR, Weight"
+    APPOINTMENT {
+        string _id PK
+        string patient FK
+        string doctor FK
+        datetime date
+        string timeSlot
+        string status "pending, scheduled, completed, etc."
+        string consultationId
+        float noShowProbability
+        datetime createdAt
+    }
+
+    MEDICAL_RECORD {
+        string _id PK
+        string patient FK
+        string doctor FK
+        string recordType "prescription, report, etc."
+        string title
+        string fileUrl
+        datetime createdAt
+    }
+
+    BILL {
+        string _id PK
+        string invoiceId
+        string patient FK
+        string appointment FK
+        number totalAmount
+        string status "pending, paid, failed"
+        datetime billingDate
+    }
+
+    ACCESS_LOG {
+        string _id PK
+        string patient FK
+        string doctor FK
+        string action "GRANTED, REVOKED, etc."
+        string type "RECORDS_ACCESS, etc."
+        datetime createdAt
+    }
+
+    ACCESS_REQUEST {
+        string _id PK
+        string patient FK
+        string doctor FK
+        string record FK
+        string status "pending, approved, rejected"
+        datetime createdAt
+    }
+
+    DOCTOR_PATIENT {
+        string _id PK
+        string doctor FK
+        string patient FK
+        string status "active, inactive"
+        datetime createdAt
+    }
+
+    AUTH_LOG {
+        string _id PK
+        string userId FK
+        string email
+        string eventType "signup, login"
+        datetime createdAt
+    }
+
+    PATIENT_CREATION_REQUEST {
+        string _id PK
+        string doctor FK
+        string patientEmail
+        string status "pending, approved, rejected"
+        datetime createdAt
     }
 ```
 
@@ -217,3 +291,97 @@ sequenceDiagram
 - **Stateless Backend Component:** Using JWTs removes session affinity requirements, letting Node.js containers auto-scale horizontally.
 - **Microservices Alignment:** ML Predictions and Notifications are physically decoupled from the critical path of the Express monolith. 
 - **Caching Layer:** Redis clusters reduce read-heavy latency spanning user dashboard loading (aggregations) and transient state features like unverified OTPs.
+
+## 8. Structural Class Definitions (UML)
+
+The following diagram illustrates the structural dependencies between React components, Express controllers, supporting services, and core data models.
+
+```mermaid
+classDiagram
+    %% Styling Definitions
+    class PatientDashboard "«Component»\nPatientDashboard"
+    class DoctorDashboard "«Component»\nDoctorDashboard"
+    class StaffDashboard "«Component»\nStaffDashboard"
+    class AdminDashboard "«Component»\nAdminDashboard"
+
+    class AuthController "«Controller»\nAuthController"
+    class AppointmentController "«Controller»\nAppointmentController"
+    class RecordController "«Controller»\nRecordController"
+    class BillingController "«Controller»\nBillingController"
+
+    class EmailService "«Service»\nEmailService"
+    class MLService "«Service»\nMLService"
+    class PdfGenerator "«Service»\nPdfGenerator"
+    class StripeService "«Service»\nStripeService"
+
+    class User "«Class»\nUser"
+    class Appointment "«Class»\nAppointment"
+    class MedicalRecord "«Class»\nMedicalRecord"
+    class Bill "«Class»\nBill"
+
+    %% Layer Colors
+    style PatientDashboard fill:#FFF59D,stroke:#FBC02D
+    style DoctorDashboard fill:#FFF59D,stroke:#FBC02D
+    style StaffDashboard fill:#FFF59D,stroke:#FBC02D
+    style AdminDashboard fill:#FFF59D,stroke:#FBC02D
+
+    style AuthController fill:#BBDEFB,stroke:#1976D2
+    style AppointmentController fill:#BBDEFB,stroke:#1976D2
+    style RecordController fill:#BBDEFB,stroke:#1976D2
+    style BillingController fill:#BBDEFB,stroke:#1976D2
+
+    style EmailService fill:#C8E6C9,stroke:#388E3C
+    style MLService fill:#C8E6C9,stroke:#388E3C
+    style PdfGenerator fill:#C8E6C9,stroke:#388E3C
+    style StripeService fill:#C8E6C9,stroke:#388E3C
+
+    style User fill:#FFCDD2,stroke:#D32F2F
+    style Appointment fill:#FFCDD2,stroke:#D32F2F
+    style MedicalRecord fill:#FFCDD2,stroke:#D32F2F
+    style Bill fill:#FFCDD2,stroke:#D32F2F
+
+    %% Component Actions
+    PatientDashboard --> AuthController : "logs in"
+    PatientDashboard --> AppointmentController : "books"
+    DoctorDashboard --> RecordController : "manages"
+    StaffDashboard --> BillingController : "generates"
+
+    %% Controller Logic
+    AuthController ..> EmailService : "uses"
+    AppointmentController ..> MLService : "predicts via"
+    BillingController ..> StripeService : "processes"
+    RecordController ..> PdfGenerator : "generates docs"
+
+    %% Domain Relationships
+    User "1" -- "*" Appointment : "owns"
+    Appointment "1" -- "0..1" Bill : "triggers"
+    User "1" -- "*" MedicalRecord : "has"
+    User "1" -- "*" Bill : "responsible for"
+
+    %% Methods & Props
+    class AuthController {
+        +login(credentials)
+        +register(data)
+        +logout()
+        +requestSignupOTP(email)
+    }
+
+    class AppointmentController {
+        +bookAppointment(data)
+        +updateStatus(id, status)
+        +getDoctorStats(id)
+    }
+
+    class User {
+        +String email
+        +String fullName
+        +String role
+        +Boolean isVerified
+    }
+
+    class Appointment {
+        +Date date
+        +String status
+        +String timeSlot
+    }
+```

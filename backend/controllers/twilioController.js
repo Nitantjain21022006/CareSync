@@ -5,88 +5,119 @@ import { v4 as uuidv4 } from 'uuid';
 const AccessToken = twilio.jwt.AccessToken;
 const VoiceGrant = AccessToken.VoiceGrant;
 
+// Twilio identity: only [a-zA-Z0-9_\-\.] allowed, max 121 chars.
+// Emails contain '@' and names may contain spaces — both cause error 53000.
+const sanitizeIdentity = (raw = '') =>
+    raw.replace(/[^a-zA-Z0-9_\-\.]/g, '_').slice(0, 121);
+
 // Check if Twilio credentials are real (not placeholders)
 const hasTwilioCredentials = () => {
-    const sid = process.env.TWILIO_ACCOUNT_SID || '';
-    const key = process.env.TWILIO_API_KEY || '';
-    const secret = process.env.TWILIO_API_SECRET || '';
-    return (
+    const sid = (process.env.TWILIO_ACCOUNT_SID || '').trim();
+    const key = (process.env.TWILIO_API_KEY || '').trim();
+    const secret = (process.env.TWILIO_API_SECRET || '').trim();
+    const appSid = (process.env.TWILIO_TWIML_APP_SID || '').trim();
+
+    const valid = (
         sid.startsWith('AC') && sid.length === 34 && !sid.includes('XXX') &&
         key.startsWith('SK') && key.length === 34 && !key.includes('XXX') &&
-        secret.length > 10 && !secret.includes('your_')
+        secret.length > 10 && !secret.includes('your_') &&
+        appSid.startsWith('AP') && appSid.length === 34
     );
+    if (!valid) {
+        console.warn('[Twilio] Credential check failed:',
+            `SID len=${sid.length}`, `KEY len=${key.length}`,
+            `SECRET len=${secret.length}`, `APPSID len=${appSid.length}`
+        );
+    }
+    return valid;
 };
+
+// Startup diagnostic
+console.log('[Twilio] Credentials configured:', hasTwilioCredentials());
 
 export const generateVoiceToken = async (req, res) => {
     try {
         const { appointmentId } = req.body;
-        const user = req.user; // From auth middleware
+        const user = req.user;
 
-        // Guard: Twilio credentials not configured
         if (!hasTwilioCredentials()) {
             return res.status(503).json({
-                message: 'Voice calling is not configured. Please add your Twilio credentials to the .env file (TWILIO_ACCOUNT_SID, TWILIO_API_KEY, TWILIO_API_SECRET, TWILIO_TWIML_APP_SID).'
+                message: 'Voice calling is not configured. Please add Twilio credentials to .env.'
             });
         }
 
-        const appointment = await Appointment.findById(appointmentId);
+        // Populate both doctor and patient so we can build sanitized identities for both
+        const appointment = await Appointment.findById(appointmentId)
+            .populate('doctor', 'fullName email')
+            .populate('patient', 'fullName email');
 
         if (!appointment) {
             return res.status(404).json({ message: 'Appointment not found' });
         }
 
-        // Validate identity - Only doctor or patient of this appointment can join
+        // Auth check — only the doctor or patient of this appointment can join
         const userId = user._id.toString();
-        if (appointment.doctor.toString() !== userId && appointment.patient.toString() !== userId) {
+        const doctorId = appointment.doctor._id.toString();
+        const patientId = appointment.patient._id.toString();
+
+        if (doctorId !== userId && patientId !== userId) {
             return res.status(403).json({ message: 'Unauthorized to join this consultation' });
         }
 
-        // Time Validation: allow 15 mins before to 60 mins after scheduled time
+        // Time validation: allow 15 min before → 60 min after
         const appointmentDate = new Date(appointment.date);
         const timeParts = appointment.timeSlot.split(':');
         appointmentDate.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), 0, 0);
-
-        const now = new Date();
-        const diff = (now - appointmentDate) / (1000 * 60); // diff in minutes
-
+        const diff = (Date.now() - appointmentDate.getTime()) / (1000 * 60);
         if (diff < -15 || diff > 60) {
             return res.status(400).json({
                 message: 'Consultation can only be started within the scheduled time window (15 min before to 60 min after).'
             });
         }
 
-        // Generate Twilio Access Token
-        const identity = user.fullName || user.email;
+        // Build sanitized Twilio identities for BOTH participants
+        const doctorRaw = appointment.doctor.fullName || appointment.doctor.email || doctorId;
+        const patientRaw = appointment.patient.fullName || appointment.patient.email || patientId;
+        const doctorIdent = sanitizeIdentity(doctorRaw);
+        const patientIdent = sanitizeIdentity(patientRaw);
+
+        // Determine caller identity and peer identity
+        const isDoctor = doctorId === userId;
+        const myIdentity = isDoctor ? doctorIdent : patientIdent;
+        const peerIdentity = isDoctor ? patientIdent : doctorIdent;
+
+        console.log(`[Twilio Token] caller="${myIdentity}" | peer="${peerIdentity}" | role=${user.role}`);
+
+        // Build Access Token
         const token = new AccessToken(
-            process.env.TWILIO_ACCOUNT_SID,
-            process.env.TWILIO_API_KEY,
-            process.env.TWILIO_API_SECRET,
-            { identity, ttl: 1800 } // 30 minute expiry
+            process.env.TWILIO_ACCOUNT_SID.trim(),
+            process.env.TWILIO_API_KEY.trim(),
+            process.env.TWILIO_API_SECRET.trim(),
+            { identity: myIdentity, ttl: 3600 }
         );
+        token.addGrant(new VoiceGrant({
+            outgoingApplicationSid: process.env.TWILIO_TWIML_APP_SID.trim(),
+            incomingAllow: true,  // ← MUST be true to receive incoming calls
+        }));
 
-        const grant = new VoiceGrant({
-            outgoingApplicationSid: process.env.TWILIO_TWIML_APP_SID,
-            incomingAllow: true,
-        });
-        token.addGrant(grant);
-
-        // Update appointment with consultation details if not already present
+        // Set appointment consultation details on first join
         if (!appointment.consultationId) {
             appointment.consultationId = uuidv4();
-            appointment.roomName = `CareSync-${appointment.doctor}-${appointment.patient}-${appointmentId}`;
+            appointment.roomName = `CareSync-${doctorId}-${patientId}-${appointmentId}`;
             appointment.consultationStatus = 'in-progress';
             await appointment.save();
         }
 
         res.json({
             token: token.toJwt(),
+            identity: myIdentity,   // who I am — my Device will register with this
+            peerIdentity,                 // who to call / who will call me
             consultationId: appointment.consultationId,
             roomName: appointment.roomName,
-            identity
         });
 
     } catch (error) {
-        console.error('Error generating Twilio token:', error.message);
+        console.error('[Twilio Token] Error:', error.message);
         res.status(500).json({ message: error.message || 'Internal server error' });
     }
 };

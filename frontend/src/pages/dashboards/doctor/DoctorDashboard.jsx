@@ -6,14 +6,16 @@ import AccessRequests from './AccessRequests';
 import AuthorizedPatients from './AuthorizedPatients';
 import ConsultationSharing from './ConsultationSharing';
 import DoctorAppointments from './DoctorAppointments';
-import { Home, ShieldAlert, Users, Share2, ClipboardList } from 'lucide-react';
+import Chat from '../Chat';
+import { Home, ShieldAlert, Users, Share2, ClipboardList, MessageCircle } from 'lucide-react';
 
 const doctorLinks = [
     { to: '/dashboard/doctor/overview', label: 'Overview', icon: Home },
     { to: '/dashboard/doctor/appointments', label: 'Appointments', icon: ClipboardList },
     { to: '/dashboard/doctor/access', label: 'Access Requests', icon: ShieldAlert },
     { to: '/dashboard/doctor/patients', label: 'Patient Records', icon: Users },
-    { to: '/dashboard/doctor/consult', label: 'Consultation Sharing', icon: Share2 }
+    { to: '/dashboard/doctor/consult', label: 'Consultation Sharing', icon: Share2 },
+    { to: '/dashboard/doctor/chat', label: 'Chat', icon: MessageCircle },
 ];
 
 const DoctorDashboard = () => {
@@ -25,6 +27,7 @@ const DoctorDashboard = () => {
                 <Route path="access" element={<AccessRequests />} />
                 <Route path="patients" element={<AuthorizedPatients />} />
                 <Route path="consult" element={<ConsultationSharing />} />
+                <Route path="chat" element={<Chat />} />
                 <Route path="/" element={<Navigate to="overview" replace />} />
             </Routes>
         </DashboardLayout>

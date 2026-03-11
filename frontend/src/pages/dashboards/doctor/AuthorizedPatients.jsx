@@ -27,9 +27,11 @@ import {
     Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../config/api';
 
 const AuthorizedPatients = () => {
+    const navigate = useNavigate();
     const [patients, setPatients] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [patientRecords, setPatientRecords] = useState([]);
@@ -206,6 +208,12 @@ const AuthorizedPatients = () => {
                             <Settings size={16} /> Edit Profile
                         </button>
                     )}
+                    <button
+                        onClick={() => navigate(`/dashboard/doctor/chat?patientId=${selectedPatient._id}`)}
+                        className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md flex items-center gap-2"
+                    >
+                        <Send size={16} /> Chat
+                    </button>
                     <button
                         onClick={() => {
                             setMedicationData({ title: '', description: '', recordType: 'prescription' });

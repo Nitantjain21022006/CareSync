@@ -10,6 +10,7 @@ import PatientProfile from './PatientProfile';
 import ReserveSession from './ReserveSession';
 import PatientDoctors from './PatientDoctors';
 import PatientBilling from './PatientBilling';
+import Chat from '../Chat';
 import {
     Home,
     FileText,
@@ -19,7 +20,8 @@ import {
     UserCircle,
     CalendarPlus,
     Users,
-    CreditCard
+    CreditCard,
+    MessageCircle
 } from 'lucide-react';
 
 const patientLinks = [
@@ -29,6 +31,7 @@ const patientLinks = [
     { to: '/dashboard/patient/reserve', label: 'Reserve Session', icon: CalendarPlus },
     { to: '/dashboard/patient/appointments', label: 'Appointments', icon: Calendar },
     { to: '/dashboard/patient/billing', label: 'Billing & Payments', icon: CreditCard },
+    { to: '/dashboard/patient/chat', label: 'Chat', icon: MessageCircle },
     { to: '/dashboard/patient/ai', label: 'AI Health Assistant', icon: MessageSquare },
     { to: '/dashboard/patient/access', label: 'Privacy & Access', icon: ShieldCheck },
     { to: '/dashboard/patient/profile', label: 'My Profile', icon: UserCircle },
@@ -43,6 +46,7 @@ const PatientDashboard = () => {
                 <Route path="doctors" element={<PatientDoctors />} />
                 <Route path="appointments" element={<PatientAppointments />} />
                 <Route path="billing" element={<PatientBilling />} />
+                <Route path="chat" element={<Chat />} />
                 <Route path="ai" element={<AIHealthAssistant />} />
                 <Route path="access" element={<AccessControl />} />
                 <Route path="profile" element={<PatientProfile />} />

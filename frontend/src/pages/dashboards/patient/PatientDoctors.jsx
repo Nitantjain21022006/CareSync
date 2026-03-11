@@ -19,11 +19,12 @@ import {
     Stethoscope
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../../config/api';
 
 const PatientDoctors = () => {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const doctorIdParam = searchParams.get('doctorId');
 
     const [doctors, setDoctors] = useState([]);
@@ -206,7 +207,10 @@ const PatientDoctors = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button className="w-full mt-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all shadow-lg active:scale-95">
+                            <button
+                                onClick={() => navigate(`/dashboard/patient/chat?doctorId=${selectedDoctor._id}`)}
+                                className="w-full mt-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all shadow-lg active:scale-95"
+                            >
                                 Start Secure Chat
                             </button>
                         </div>

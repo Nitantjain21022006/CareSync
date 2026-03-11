@@ -164,7 +164,7 @@ const PatientAppointments = () => {
                                 >
                                     <div className="flex items-center space-x-6">
                                         <div className="h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-emerald-600 transition-all">
-                                            {appt.doctor?.fullName[0]}
+                                            {appt.doctor?.fullName?.[0]}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3">
@@ -312,7 +312,7 @@ const PatientAppointments = () => {
                                             <div className="space-y-6">
                                                 <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                                     <div className="h-14 w-14 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xl">
-                                                        {selectedAppt.doctor?.fullName[0]}
+                                                        {selectedAppt.doctor?.fullName?.[0]}
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-slate-900 text-lg">Dr. {selectedAppt.doctor?.fullName}</p>
@@ -453,7 +453,7 @@ const PatientAppointments = () => {
                                 <div key={doc._id} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 hover:border-emerald-200 rounded-xl transition-all group cursor-pointer shadow-sm hover:bg-white">
                                     <div className="flex items-center space-x-3">
                                         <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-emerald-600 uppercase transition-all">
-                                            {doc.fullName[0]}
+                                            {doc.fullName?.[0]}
                                         </div>
                                         <div>
                                             <p className="text-[13px] font-bold text-slate-900 tracking-tight capitalize">Dr. {doc.fullName.split(' ')[1] || doc.fullName}</p>

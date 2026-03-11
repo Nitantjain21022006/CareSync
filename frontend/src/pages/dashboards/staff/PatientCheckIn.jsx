@@ -118,7 +118,7 @@ const PatientCheckIn = () => {
                                 >
                                     <div className="flex items-center gap-6 text-left">
                                         <div className="h-14 w-14 rounded-2xl bg-[#E9F5F3] border border-[#D1E8E4] flex items-center justify-center text-[#2D7D6F] font-black text-xl group-hover:bg-[#2D7D6F] group-hover:text-white transition-all shadow-sm">
-                                            {appt.patient?.fullName[0]}
+                                            {appt.patient?.fullName?.[0]}
                                         </div>
                                         <div>
                                             <h3 className="font-black text-[#1A202C] text-lg tracking-tight">{appt.patient?.fullName}</h3>

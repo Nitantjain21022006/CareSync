@@ -18,10 +18,12 @@ export const getJitsiRoom = async (req, res) => {
             return res.status(403).json({ message: 'Unauthorized' });
         }
 
-        // 1. Staff Check-In Requirement
-        // The user requested: "if and only if ... staff marks Check-In ... before that it should not be appeared"
-        if (appointment.status !== 'checked-in' && appointment.status !== 'in-progress' && appointment.status !== 'waiting') {
-            return res.status(400).json({ message: 'Session can only be joined after patient has checked in at the facility.' });
+        // 1. Staff Check-In Requirement (Bypassed for Doctors)
+        // Doctors can start the session manually. Patients still need check-in or the doctor to be present (in-progress).
+        if (user.role === 'patient') {
+            if (appointment.status !== 'checked-in' && appointment.status !== 'in-progress' && appointment.status !== 'waiting') {
+                return res.status(400).json({ message: 'Session can only be joined after patient has checked in at the facility.' });
+            }
         }
 
         // 2. Time Validation (1-hour max window as requested)

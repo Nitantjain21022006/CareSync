@@ -108,7 +108,7 @@ const DoctorAppointments = () => {
             </div>
 
             {/* Tabs & Search */}
-            <div className="flex flex-col sm:flex-row justify-between items-centerGap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="flex p-1 bg-slate-50 rounded-xl w-full sm:w-auto">
                     <button
                         onClick={() => setActiveTab('pending')}
@@ -170,7 +170,7 @@ const DoctorAppointments = () => {
                                 <div>
                                     <div className="flex items-start justify-between mb-6">
                                         <div className="h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center font-bold text-xl text-emerald-600 shadow-sm">
-                                            {appt.patient?.fullName[0]}
+                                            {appt.patient?.fullName?.[0]}
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${appt.status === 'pending'
                                             ? 'bg-amber-50 text-amber-600 border-amber-100'
@@ -315,7 +315,7 @@ const DoctorAppointments = () => {
                                 <div className="space-y-6">
                                     <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center gap-4">
                                         <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center font-bold text-emerald-600 shadow-sm">
-                                            {selectedAppt?.patient?.fullName[0]}
+                                            {selectedAppt?.patient?.fullName?.[0]}
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-slate-900">{selectedAppt?.patient?.fullName}</p>

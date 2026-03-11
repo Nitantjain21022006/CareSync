@@ -95,7 +95,7 @@ const Calendar = ({ appointments }) => {
                                 {dayAppts.slice(0, 2).map((a, i) => (
                                     <div key={i} className={`text-[9px] p-1.5 rounded-lg font-bold truncate border ${a.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                         }`}>
-                                        {a.patient?.fullName.split(' ')[0]}
+                                        {a.patient?.fullName?.split(' ')?.[0] || 'Patient'}
                                     </div>
                                 ))}
                                 {dayAppts.length > 2 && (
@@ -122,7 +122,7 @@ const PatientFolderCard = ({ patient }) => (
                 </div>
             </div>
             <div className="text-center w-full px-2">
-                <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tighter">{(patient.fullName || 'Patient').split(' ')[0]}</p>
+                <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tighter">{(patient.fullName || 'Patient').split(' ')?.[0] || 'Patient'}</p>
                 <p className="text-[9px] font-bold text-emerald-700 opacity-60 uppercase tracking-widest truncate">Verified Profile</p>
             </div>
         </motion.div>
@@ -276,7 +276,7 @@ const DoctorOverview = () => {
                                     <div key={appt._id} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl hover:border-emerald-200 transition-all group">
                                         <div className="flex items-center space-x-4">
                                             <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-emerald-600 shadow-sm">
-                                                {appt.patient?.fullName[0]}
+                                                {appt.patient?.fullName?.[0]}
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-900 capitalize">{appt.patient?.fullName}</p>
@@ -326,7 +326,7 @@ const DoctorOverview = () => {
                                     <div key={appt._id} className="p-4 bg-white/5 rounded-xl flex items-center justify-between border border-white/5 hover:bg-white/10 transition-all group/item shadow-inner">
                                         <div className="flex items-center space-x-3">
                                             <div className="h-9 w-9 rounded-lg bg-emerald-600/20 flex items-center justify-center font-bold text-emerald-400 text-sm">
-                                                {appt.patient?.fullName[0]}
+                                                {appt.patient?.fullName?.[0]}
                                             </div>
                                             <div>
                                                 <p className="font-bold text-sm text-slate-100 capitalize">{appt.patient?.fullName}</p>
@@ -429,7 +429,7 @@ const DoctorOverview = () => {
                                 <div className="space-y-6">
                                     <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center gap-4">
                                         <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center font-bold text-emerald-600 shadow-sm">
-                                            {selectedAppt?.patient?.fullName[0]}
+                                            {selectedAppt?.patient?.fullName?.[0]}
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-slate-900">{selectedAppt?.patient?.fullName}</p>

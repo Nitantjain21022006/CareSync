@@ -191,7 +191,7 @@ const AccessControl = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-50" />
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="h-16 w-16 rounded-[22px] bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 font-black shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
-                                        {req.doctor?.fullName[0]}
+                                        {req.doctor?.fullName?.[0]}
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-black text-slate-900 text-xl tracking-tighter">Dr. {req.doctor?.fullName}</p>
@@ -241,7 +241,7 @@ const AccessControl = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-50" />
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="h-16 w-16 rounded-[22px] bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
-                                        {req.doctor?.fullName[0]}
+                                        {req.doctor?.fullName?.[0]}
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-black text-slate-900 text-xl tracking-tighter">Dr. {req.doctor?.fullName}</p>
@@ -302,7 +302,7 @@ const AccessControl = () => {
                                     >
                                         <div className="flex items-center gap-6">
                                             <div className="h-16 w-16 rounded-[22px] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
-                                                {doc.fullName[0]}
+                                                {doc.fullName?.[0]}
                                             </div>
                                             <div>
                                                 <p className="font-black text-slate-900 text-xl tracking-tighter">Dr. {doc.fullName}</p>
@@ -370,7 +370,7 @@ const AccessControl = () => {
                                     >
                                         <div className="flex items-center gap-6">
                                             <div className="h-14 w-14 rounded-[20px] bg-white flex items-center justify-center text-slate-300 font-black border border-slate-100 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm transform group-hover:-rotate-3">
-                                                {doc.fullName[0]}
+                                                {doc.fullName?.[0]}
                                             </div>
                                             <div>
                                                 <p className="text-base font-black text-slate-900 tracking-tighter">Dr. {doc.fullName}</p>
@@ -448,7 +448,7 @@ const AccessControl = () => {
                                     >
                                         <div className="flex items-center gap-6">
                                             <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-slate-900 group-hover:text-white transition-all">
-                                                {log.doctor?.fullName[0]}
+                                                {log.doctor?.fullName?.[0]}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-3">

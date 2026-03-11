@@ -160,7 +160,7 @@ const StaffAppointments = () => {
                                         <td className="px-8 py-8">
                                             <div className="flex items-center gap-4">
                                                 <div className="h-12 w-12 rounded-2xl bg-white border border-[#E2E8F0] flex items-center justify-center font-black text-[#2D7D6F] shadow-sm">
-                                                    {appt.patient?.fullName[0]}
+                                                    {appt.patient?.fullName?.[0]}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-[#1A202C] tracking-tight">{appt.patient?.fullName}</p>

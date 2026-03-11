@@ -173,7 +173,7 @@ const AuthorizedPatients = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-[40px] -mr-16 -mt-16" />
                 <div className="flex items-center gap-6 relative z-10 w-full overflow-hidden">
                     <div className="h-20 w-20 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-emerald-600 font-bold text-3xl shadow-inner flex-shrink-0">
-                        {selectedPatient.fullName[0]}
+                        {selectedPatient.fullName?.[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                         {isEditing ? (
@@ -440,7 +440,7 @@ const AuthorizedPatients = () => {
                                 >
                                     <div className="flex items-center gap-5">
                                         <div className="h-16 w-16 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-emerald-600 font-bold text-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
-                                            {patient.fullName[0]}
+                                            {patient.fullName?.[0]}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <h3 className="font-bold text-slate-900 text-lg tracking-tight truncate capitalize">{patient.fullName}</h3>

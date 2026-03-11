@@ -44,7 +44,7 @@ const AppointmentItem = ({ appointment }) => (
     >
         <div className="flex items-center space-x-4">
             <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center text-emerald-600 font-bold border border-slate-200 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                {(appointment.doctor?.fullName || ' ')[0]}
+                {appointment.doctor?.fullName?.[0] || ' '}
             </div>
             <div>
                 <p className="font-bold text-slate-900 text-md capitalize">Dr. {appointment.doctor?.fullName || 'Specialist'}</p>
@@ -266,7 +266,7 @@ const PatientOverview = () => {
                             <div key={req._id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="h-12 w-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-600 font-black shadow-sm">
-                                        {(req.doctor?.fullName || ' ')[0]}
+                                        {req.doctor?.fullName?.[0] || ' '}
                                     </div>
                                     <div>
                                         <p className="font-bold text-slate-900 text-sm">Dr. {req.doctor?.fullName || 'Specialist'}</p>
@@ -324,7 +324,7 @@ const PatientOverview = () => {
                                             </div>
                                         </div>
                                         <div className="text-center w-full px-2">
-                                            <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tighter">Dr. {(doc.fullName || 'Specialist').replace('Dr. ', '').split(' ')[0]}</p>
+                                            <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tighter">Dr. {(doc.fullName || 'Specialist').replace('Dr. ', '').split(' ')?.[0] || 'Specialist'}</p>
                                             <p className="text-[9px] font-bold text-emerald-700 opacity-60 uppercase tracking-widest truncate">{doc.metadata?.specialty || 'Specialist'}</p>
                                         </div>
                                     </Link>
@@ -459,7 +459,7 @@ const PatientOverview = () => {
                                         <div key={doc._id} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-transparent hover:border-emerald-100 group transition-all">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-600 font-black shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                                                    {(doc.fullName || ' ')[0]}
+                                                    {doc.fullName?.[0] || ' '}
                                                 </div>
                                                 <div>
                                                     <p className="font-black text-slate-900 text-sm tracking-tight">{doc.fullName || 'Specialist'}</p>

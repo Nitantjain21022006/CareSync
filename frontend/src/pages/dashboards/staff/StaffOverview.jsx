@@ -147,7 +147,7 @@ const StaffOverview = () => {
                                 >
                                     <div className="flex items-center space-x-4">
                                         <div className="h-12 w-12 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex items-center justify-center font-black text-[#2D7D6F] group-hover:bg-[#2D7D6F] group-hover:text-white transition-all">
-                                            {appt.patient?.fullName[0]}
+                                            {appt.patient?.fullName?.[0]}
                                         </div>
                                         <div>
                                             <p className="font-black text-[#1A202C] tracking-tight">{appt.patient?.fullName}</p>

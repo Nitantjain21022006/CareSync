@@ -45,7 +45,7 @@ const groupMessagesByDate = (msgs) => {
     return groups;
 };
 
-import { getSocket } from '../../utils/socketClient';
+
 
 /* ─── Component ───────────────────────────────────────── */
 const Chat = () => {

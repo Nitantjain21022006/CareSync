@@ -134,7 +134,7 @@ const AccessRequests = () => {
                                     <div className="flex items-center gap-4 text-left">
                                         <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-bold text-xs ${selectedPatient?._id === patient._id ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-emerald-600 border border-slate-200'
                                             }`}>
-                                            {patient.fullName[0]}
+                                            {patient.fullName?.[0]}
                                         </div>
                                         <div className="min-w-0">
                                             <p className={`text-sm font-bold tracking-tight truncate capitalize ${selectedPatient?._id === patient._id ? 'text-white' : 'text-slate-900'}`}>{patient.fullName}</p>

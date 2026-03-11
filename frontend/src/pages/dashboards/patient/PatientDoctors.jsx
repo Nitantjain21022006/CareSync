@@ -110,7 +110,7 @@ const PatientDoctors = () => {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-[40px] -mr-16 -mt-16" />
                     <div className="flex items-center gap-6 relative z-10 w-full overflow-hidden">
                         <div className="h-20 w-20 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-3xl shadow-inner flex-shrink-0">
-                            {selectedDoctor.fullName[0]}
+                            {selectedDoctor.fullName?.[0]}
                         </div>
                         <div className="flex-1 min-w-0">
                             <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-1 capitalize truncate">{selectedDoctor.fullName}</h2>
@@ -282,7 +282,7 @@ const PatientDoctors = () => {
                             <div>
                                 <div className="flex items-center gap-5 mb-6">
                                     <div className="h-16 w-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-emerald-600 font-bold text-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner relative z-10">
-                                        {doctor.fullName[0]}
+                                        {doctor.fullName?.[0]}
                                     </div>
                                     <div className="flex-1 min-w-0 relative z-10 text-left">
                                         <h3 className="font-bold text-slate-900 text-xl tracking-tight truncate capitalize">{doctor.fullName}</h3>

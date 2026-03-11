@@ -160,9 +160,9 @@ const ReserveSession = () => {
                                     <select
                                         required
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer"
-                                        value={bookingData.timeSlot.split(':')[0] || ''}
+                                        value={bookingData.timeSlot?.split(':')?.[0] || ''}
                                         onChange={(e) => {
-                                            const mins = bookingData.timeSlot.split(':')[1] || '00';
+                                            const mins = bookingData.timeSlot?.split(':')?.[1] || '00';
                                             setBookingData({ ...bookingData, timeSlot: `${e.target.value}:${mins}` });
                                         }}
                                     >
@@ -179,9 +179,9 @@ const ReserveSession = () => {
                                     <select
                                         required
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer"
-                                        value={bookingData.timeSlot.split(':')[1] || ''}
+                                        value={bookingData.timeSlot?.split(':')?.[1] || ''}
                                         onChange={(e) => {
-                                            const hours = bookingData.timeSlot.split(':')[0] || '09';
+                                            const hours = bookingData.timeSlot?.split(':')?.[0] || '09';
                                             setBookingData({ ...bookingData, timeSlot: `${hours}:${e.target.value}` });
                                         }}
                                     >

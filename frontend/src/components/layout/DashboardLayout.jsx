@@ -15,6 +15,7 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import NotificationDropdown from '../NotificationDropdown';
 
 const SidebarLink = ({ to, icon: Icon, children }) => (
     <NavLink
@@ -37,6 +38,7 @@ const SidebarLink = ({ to, icon: Icon, children }) => (
 const DashboardLayout = ({ children, role, links }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [showNotifications, setShowNotifications] = React.useState(false);
 
     const handleLogout = async () => {
         await logout();
@@ -128,9 +130,17 @@ const DashboardLayout = ({ children, role, links }) => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <button className="relative w-10 h-10 flex items-center justify-center bg-[#F1F5F9] rounded-xl text-slate-400 hover:text-[#2D7D6F] transition-colors">
+                        <button
+                            onClick={() => setShowNotifications(!showNotifications)}
+                            className="relative w-10 h-10 flex items-center justify-center bg-[#F1F5F9] rounded-xl text-slate-400 hover:text-[#2D7D6F] transition-colors"
+                        >
                             <Bell size={20} />
                             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+
+                            <NotificationDropdown
+                                isOpen={showNotifications}
+                                onClose={() => setShowNotifications(false)}
+                            />
                         </button>
 
                         <div className="h-10 w-px bg-[#E2E8F0]"></div>

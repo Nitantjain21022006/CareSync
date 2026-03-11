@@ -53,7 +53,16 @@ const DoctorAppointments = () => {
         }
     };
 
-    const pendingAppts = appointments.filter(a => a.status === 'pending');
+    const handleRescheduleResponse = async (id, response) => {
+        try {
+            await api.patch(`/appointments/respond-reschedule/${id}`, { response });
+            fetchAppointments();
+        } catch (err) {
+            console.error('Reschedule response failed');
+        }
+    };
+
+    const pendingAppts = appointments.filter(a => a.status === 'pending' || a.status === 'reschedule_requested');
     const confirmedAppts = appointments.filter(a => a.status === 'confirmed');
 
     const isCallLinkActive = (appt) => {
@@ -165,9 +174,11 @@ const DoctorAppointments = () => {
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${appt.status === 'pending'
                                             ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                            : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                            : appt.status === 'reschedule_requested'
+                                                ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                                : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                             }`}>
-                                            {appt.status}
+                                            {appt.status.replace('_', ' ')}
                                         </div>
                                     </div>
 
@@ -183,6 +194,15 @@ const DoctorAppointments = () => {
                                             <Clock className="h-4 w-4 mr-3 text-emerald-600" />
                                             {appt.timeSlot}
                                         </div>
+                                        {appt.status === 'reschedule_requested' && (
+                                            <div className="mt-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                                <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-2">Requested New Slot</p>
+                                                <div className="flex justify-between items-center text-[11px] font-bold text-indigo-700">
+                                                    <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date(appt.requestedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</span>
+                                                    <span className="flex items-center gap-1.5"><Clock size={14} /> {appt.requestedTimeSlot}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {appt.notes && (
@@ -212,6 +232,21 @@ const DoctorAppointments = () => {
                                                 className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
                                             >
                                                 Accept
+                                            </button>
+                                        </>
+                                    ) : appt.status === 'reschedule_requested' ? (
+                                        <>
+                                            <button
+                                                onClick={() => handleRescheduleResponse(appt._id, 'deny')}
+                                                className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                                            >
+                                                Decline
+                                            </button>
+                                            <button
+                                                onClick={() => handleRescheduleResponse(appt._id, 'approve')}
+                                                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                                            >
+                                                Approve
                                             </button>
                                         </>
                                     ) : (
@@ -320,7 +355,7 @@ const DoctorAppointments = () => {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

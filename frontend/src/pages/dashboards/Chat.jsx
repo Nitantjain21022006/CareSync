@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getSocket } from '../../utils/socketClient';
 import {
     Send,
     Search,
@@ -45,17 +45,7 @@ const groupMessagesByDate = (msgs) => {
     return groups;
 };
 
-/* ─── Socket singleton ────────────────────────────────── */
-let socketInstance = null;
-const getSocket = () => {
-    if (!socketInstance || !socketInstance.connected) {
-        socketInstance = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', {
-            withCredentials: true,
-            transports: ['websocket', 'polling'],
-        });
-    }
-    return socketInstance;
-};
+import { getSocket } from '../../utils/socketClient';
 
 /* ─── Component ───────────────────────────────────────── */
 const Chat = () => {
@@ -368,8 +358,8 @@ const Chat = () => {
                                             <div className={`max-w-[70%] group`}>
                                                 <div
                                                     className={`px-5 py-3 rounded-2xl text-sm font-medium leading-relaxed shadow-sm ${isMine
-                                                            ? 'bg-emerald-600 text-white rounded-br-md'
-                                                            : 'bg-white border border-slate-200 text-slate-800 rounded-bl-md'
+                                                        ? 'bg-emerald-600 text-white rounded-br-md'
+                                                        : 'bg-white border border-slate-200 text-slate-800 rounded-bl-md'
                                                         }`}
                                                 >
                                                     {msg.content}

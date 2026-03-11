@@ -1,6 +1,7 @@
 import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';
 import { sendEmail } from '../utils/email.js';
+import { getIo } from '../utils/socket.js';
 
 // @desc    Get upcoming appointments for patient
 // @route   GET /api/appointments/patient/upcoming
@@ -318,10 +319,112 @@ export const updateAppointmentStatus = async (req, res) => {
             } catch (err) {
                 console.error('Email notification to patient failed');
             }
+
+            // Real-time notification
+            const io = getIo();
+            if (io) {
+                io.emit('appointmentStatusUpdated', {
+                    appointmentId: appointment._id,
+                    patientId: appointment.patient._id,
+                    status: 'confirmed',
+                    message: `Your appointment with Dr. ${appointment.doctor.fullName} has been confirmed.`
+                });
+            }
         }
 
         res.status(200).json({ success: true, data: appointment });
     } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Request appointment reschedule
+// @route   PATCH /api/appointments/request-reschedule/:id
+// @access  Private (Patient)
+export const requestReschedule = async (req, res) => {
+    try {
+        const { date, timeSlot } = req.body;
+        const appointment = await Appointment.findById(req.params.id);
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, error: 'Appointment not found' });
+        }
+
+        if (appointment.patient.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, error: 'Not authorized' });
+        }
+
+        appointment.status = 'reschedule_requested';
+        appointment.requestedDate = date;
+        appointment.requestedTimeSlot = timeSlot;
+
+        await appointment.save();
+
+        // Notify Doctor
+        const io = getIo();
+        if (io) {
+            io.emit('appointmentStatusUpdated', {
+                appointmentId: appointment._id,
+                doctorId: appointment.doctor._id,
+                status: 'reschedule_requested',
+                message: `Patient ${req.user.fullName} requested to reschedule their appointment.`
+            });
+        }
+
+        res.status(200).json({ success: true, data: appointment });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Respond to reschedule request
+// @route   PATCH /api/appointments/respond-reschedule/:id
+// @access  Private (Doctor)
+export const respondReschedule = async (req, res) => {
+    try {
+        const { response } = req.body; // 'approve' or 'deny'
+        const appointment = await Appointment.findById(req.params.id)
+            .populate('patient', 'fullName email')
+            .populate('doctor', 'fullName');
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, error: 'Appointment not found' });
+        }
+
+        if (appointment.doctor._id.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, error: 'Not authorized' });
+        }
+
+        if (response === 'approve') {
+            appointment.status = 'confirmed';
+            appointment.date = appointment.requestedDate;
+            appointment.timeSlot = appointment.requestedTimeSlot;
+        } else {
+            appointment.status = 'confirmed';
+        }
+
+        appointment.requestedDate = undefined;
+        appointment.requestedTimeSlot = undefined;
+
+        await appointment.save();
+
+        // Notify Patient
+        const io = getIo();
+        if (io) {
+            io.emit('appointmentStatusUpdated', {
+                appointmentId: appointment._id,
+                patientId: appointment.patient._id,
+                status: appointment.status,
+                message: response === 'approve'
+                    ? `Your reschedule request was approved by Dr. ${appointment.doctor.fullName}.`
+                    : `Your reschedule request was declined by Dr. ${appointment.doctor.fullName}.`
+            });
+        }
+
+        res.status(200).json({ success: true, data: appointment });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };

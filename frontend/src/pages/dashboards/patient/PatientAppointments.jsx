@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import api from '../../../config/api';
+import { getSocket } from '../../../utils/socketClient';
 
 const PatientAppointments = () => {
     const [appointments, setAppointments] = useState([]);
@@ -21,9 +22,25 @@ const PatientAppointments = () => {
     const [loading, setLoading] = useState(true);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [bookingData, setBookingData] = useState({ doctor: '', date: '', timeSlot: '', type: 'In-person' });
+    const [selectedAppt, setSelectedAppt] = useState(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+    const [rescheduleData, setRescheduleData] = useState({ date: '', hour: '09', minute: '00' });
+    const [isRescheduleLoading, setIsRescheduleLoading] = useState(false);
+    const [showOptionsId, setShowOptionsId] = useState(null);
 
     useEffect(() => {
         fetchInitialData();
+
+        const socket = getSocket();
+        socket.on('appointmentStatusUpdated', (data) => {
+            console.log('Appointment status updated:', data);
+            fetchInitialData(); // Refresh list when status changes
+        });
+
+        return () => {
+            socket.off('appointmentStatusUpdated');
+        };
     }, []);
 
     const fetchInitialData = async () => {
@@ -50,6 +67,25 @@ const PatientAppointments = () => {
             setBookingData({ doctor: '', date: '', timeSlot: '', type: 'In-person' });
         } catch (err) {
             console.error('Booking failed');
+        }
+    };
+
+    const handleReschedule = async (e) => {
+        e.preventDefault();
+        setIsRescheduleLoading(true);
+        try {
+            const timeSlot = `${rescheduleData.hour}:${rescheduleData.minute}`;
+            await api.patch(`/appointments/request-reschedule/${selectedAppt._id}`, {
+                date: rescheduleData.date,
+                timeSlot
+            });
+            setIsRescheduleModalOpen(false);
+            fetchInitialData();
+            // Success notification or feedback could go here
+        } catch (err) {
+            console.error('Reschedule request failed');
+        } finally {
+            setIsRescheduleLoading(false);
         }
     };
 
@@ -168,11 +204,55 @@ const PatientAppointments = () => {
                                                 Session Elapsed
                                             </div>
                                         ) : (
-                                            <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
-                                                <MoreHorizontal className="h-5 w-5" />
-                                            </button>
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowOptionsId(showOptionsId === appt._id ? null : appt._id)}
+                                                    className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-emerald-600 transition-all shadow-sm"
+                                                >
+                                                    <MoreHorizontal className="h-5 w-5" />
+                                                </button>
+
+                                                <AnimatePresence>
+                                                    {showOptionsId === appt._id && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                            className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                                                        >
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedAppt(appt);
+                                                                    setIsRescheduleModalOpen(true);
+                                                                    setShowOptionsId(null);
+                                                                }}
+                                                                className="w-full px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-all"
+                                                            >
+                                                                <Clock size={16} className="text-emerald-500" />
+                                                                Reschedule
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    // Add cancel logic if needed
+                                                                    setShowOptionsId(null);
+                                                                }}
+                                                                className="w-full px-4 py-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-all border-t border-slate-50"
+                                                            >
+                                                                <Edit2 size={16} />
+                                                                Cancel
+                                                            </button>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
                                         )}
-                                        <button className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedAppt(appt);
+                                                setIsDetailsModalOpen(true);
+                                            }}
+                                            className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md"
+                                        >
                                             {['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) ? 'Join Session' : 'Details'}
                                         </button>
                                     </div>
@@ -207,6 +287,156 @@ const PatientAppointments = () => {
                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-white/10">
                             <Video size={28} className="text-white" />
                         </div>
+
+                        {/* Details Modal */}
+                        <AnimatePresence>
+                            {isDetailsModalOpen && selectedAppt && (
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                        className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden"
+                                    >
+                                        <div className="p-8">
+                                            <div className="flex justify-between items-start mb-8">
+                                                <div>
+                                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Appointment Details</h2>
+                                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Status: {selectedAppt.status}</p>
+                                                </div>
+                                                <button onClick={() => setIsDetailsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                                                    <ArrowRight className="h-5 w-5 text-slate-400 rotate-180" />
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                                    <div className="h-14 w-14 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xl">
+                                                        {selectedAppt.doctor?.fullName[0]}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-slate-900 text-lg">Dr. {selectedAppt.doctor?.fullName}</p>
+                                                        <p className="text-xs text-slate-500 font-medium">{selectedAppt.doctor?.metadata?.specialization || 'General Specialist'}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="p-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl">
+                                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Date</p>
+                                                        <p className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                                            <Calendar size={14} />
+                                                            {new Date(selectedAppt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl">
+                                                        <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-1">Time</p>
+                                                        <p className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                                            <Clock size={14} />
+                                                            {selectedAppt.timeSlot}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Reason for consultation</p>
+                                                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-600 font-medium leading-relaxed">
+                                                        {selectedAppt.reason || 'No specific reason provided for this consultation.'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => setIsDetailsModalOpen(false)}
+                                                className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-black transition-all shadow-xl"
+                                            >
+                                                Close Details
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Reschedule Modal */}
+                        <AnimatePresence>
+                            {isRescheduleModalOpen && selectedAppt && (
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                        className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden"
+                                    >
+                                        <form onSubmit={handleReschedule} className="p-8">
+                                            <div className="flex justify-between items-start mb-8">
+                                                <div>
+                                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Reschedule</h2>
+                                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Requires Doctor's Approval</p>
+                                                </div>
+                                                <button type="button" onClick={() => setIsRescheduleModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                                                    <ArrowRight className="h-5 w-5 text-slate-400 rotate-180" />
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Select New Date</label>
+                                                    <input
+                                                        type="date"
+                                                        required
+                                                        min={new Date().toISOString().split('T')[0]}
+                                                        value={rescheduleData.date}
+                                                        onChange={(e) => setRescheduleData({ ...rescheduleData, date: e.target.value })}
+                                                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-emerald-500 transition-all"
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Hour</label>
+                                                        <select
+                                                            value={rescheduleData.hour}
+                                                            onChange={(e) => setRescheduleData({ ...rescheduleData, hour: e.target.value })}
+                                                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-emerald-500 transition-all appearance-none"
+                                                        >
+                                                            {Array.from({ length: 24 }).map((_, i) => (
+                                                                <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Minute</label>
+                                                        <select
+                                                            value={rescheduleData.minute}
+                                                            onChange={(e) => setRescheduleData({ ...rescheduleData, minute: e.target.value })}
+                                                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-emerald-500 transition-all appearance-none"
+                                                        >
+                                                            {['00', '15', '30', '45'].map(m => (
+                                                                <option key={m} value={m}>{m}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                                    <p className="text-[10px] text-amber-700 font-bold leading-relaxed">
+                                                        Note: Rescheduling is subject to the doctor's availability. They will be notified to review and approve your request.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={isRescheduleLoading}
+                                                className="w-full mt-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-emerald-700 transition-all shadow-xl disabled:opacity-50"
+                                            >
+                                                {isRescheduleLoading ? 'Sending Request...' : 'Send Reschedule Request'}
+                                            </button>
+                                        </form>
+                                    </motion.div>
+                                </div>
+                            )}
+                        </AnimatePresence>
                         <h4 className="text-xl font-bold tracking-tight">Secure Tele-health</h4>
                         <p className="text-xs text-slate-400 font-medium leading-relaxed mt-4 px-2">
                             End-to-end encrypted video conferencing for safe remote clinical consultations.

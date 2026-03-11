@@ -155,14 +155,43 @@ const ReserveSession = () => {
                             <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">
                                 Time Window
                             </label>
-                            <div className="relative">
-                                <input
-                                    type="time"
-                                    required
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
-                                    value={bookingData.timeSlot}
-                                    onChange={(e) => setBookingData({ ...bookingData, timeSlot: e.target.value })}
-                                />
+                            <div className="flex gap-3">
+                                <div className="relative flex-1">
+                                    <select
+                                        required
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer"
+                                        value={bookingData.timeSlot.split(':')[0] || ''}
+                                        onChange={(e) => {
+                                            const mins = bookingData.timeSlot.split(':')[1] || '00';
+                                            setBookingData({ ...bookingData, timeSlot: `${e.target.value}:${mins}` });
+                                        }}
+                                    >
+                                        <option value="">Hour</option>
+                                        {Array.from({ length: 24 }, (_, i) => (
+                                            <option key={i} value={i.toString().padStart(2, '0')}>
+                                                {i.toString().padStart(2, '0')}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none rotate-90" />
+                                </div>
+                                <div className="relative flex-1">
+                                    <select
+                                        required
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer"
+                                        value={bookingData.timeSlot.split(':')[1] || ''}
+                                        onChange={(e) => {
+                                            const hours = bookingData.timeSlot.split(':')[0] || '09';
+                                            setBookingData({ ...bookingData, timeSlot: `${hours}:${e.target.value}` });
+                                        }}
+                                    >
+                                        <option value="">Min</option>
+                                        {['00', '15', '30', '45'].map(m => (
+                                            <option key={m} value={m}>{m}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none rotate-90" />
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -10,7 +10,8 @@ import 'dotenv/config';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import cookie from 'cookie';
+import cookie from "cookie";
+import { setIo } from './utils/socket.js';
 
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
@@ -46,6 +47,8 @@ const io = new SocketIOServer(httpServer, {
     credentials: true,
   },
 });
+
+setIo(io);
 
 // Map userId -> Set of socket IDs (a user can have multiple tabs open)
 const onlineUsers = new Map();

@@ -21,9 +21,11 @@ const appointmentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'scheduled', 'checked-in', 'waiting', 'in-progress', 'completed', 'billed', 'paid', 'cancelled', 'no-show'],
+        enum: ['pending', 'confirmed', 'scheduled', 'checked-in', 'waiting', 'in-progress', 'completed', 'billed', 'paid', 'cancelled', 'no-show', 'reschedule_requested'],
         default: 'pending'
     },
+    requestedDate: Date,
+    requestedTimeSlot: String,
     checkInTime: Date,
     roomAllocation: String,
     reason: String,

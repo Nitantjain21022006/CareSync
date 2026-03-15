@@ -37,6 +37,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy for Render deployment (required for secure cookies)
+app.set('trust proxy', 1);
+
 /* =========================
    SOCKET.IO SETUP
 ========================= */

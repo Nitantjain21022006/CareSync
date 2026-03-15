@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import time
 import random
 
 app = Flask(__name__)
+CORS(app) # Enable CORS for all routes (necessary for backend-to-ML communication)
 
 # Mock model prediction logic
 def predict_medication_adherence(data):

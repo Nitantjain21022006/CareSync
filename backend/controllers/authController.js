@@ -101,8 +101,8 @@ const sendTokenResponse = (user, statusCode, res) => {
     const options = {
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        secure: true, // Always true for cross-domain cookies to work in modern browsers
+        sameSite: 'none' // Required for cross-domain cookies (Vercel -> Render)
     };
 
     user.password = undefined; // Remove password from response
@@ -251,7 +251,9 @@ export const login = async (req, res, next) => {
 export const logout = async (req, res, next) => {
     res.cookie('token', 'none', {
         expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none'
     });
 
     res.status(200).json({

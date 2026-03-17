@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../config/api';
+import { useAuth } from '../context/AuthContext';
 import { FileText, Upload, Save, CheckCircle, Loader2, Clipboard } from 'lucide-react';
 
 const ConsultationSummary = () => {
@@ -8,6 +9,8 @@ const ConsultationSummary = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const duration = searchParams.get('duration') || 0;
+    const { user } = useAuth();
+    const isPatient = user?.role === 'patient';
 
     const [notes, setNotes] = useState('');
     const [prescription, setPrescription] = useState(null);
@@ -49,13 +52,55 @@ const ConsultationSummary = () => {
 
             setSuccess(true);
             setLoading(false);
-            setTimeout(() => navigate('/dashboard/doctor'), 2000);
+            setTimeout(() => navigate(isPatient ? '/dashboard/patient' : '/dashboard/doctor'), 2000);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save consultation summary');
             setLoading(false);
         }
     };
 
+    // ── Patient: simple session-ended screen ──────────────────────────────────
+    if (isPatient) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+                <div className="bg-white p-12 rounded-[3rem] shadow-2xl max-w-lg w-full text-center space-y-8 animate-in zoom-in duration-500">
+                    <div className="mx-auto w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-12 h-12 text-emerald-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Session Ended</h2>
+                        <p className="text-slate-500 font-medium mt-2">
+                            Your consultation has ended. Thank you for using CareSync.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <button
+                            onClick={handleContinue}
+                            className="bg-indigo-600 text-white p-6 rounded-3xl font-bold flex flex-col items-center justify-center gap-3 hover:bg-indigo-700 transition-all group border-4 border-indigo-100"
+                        >
+                            <Loader2 className="w-8 h-8 group-hover:rotate-12 transition-transform" />
+                            <div className="text-left w-full text-center">
+                                <p className="text-lg">Reconnect</p>
+                                <p className="text-indigo-200 text-xs font-normal">Back to video room</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => navigate('/dashboard/patient')}
+                            className="bg-slate-900 text-white p-6 rounded-3xl font-bold flex flex-col items-center justify-center gap-3 hover:bg-slate-800 transition-all group"
+                        >
+                            <CheckCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                            <div className="text-left w-full text-center">
+                                <p className="text-lg">Go to My Portal</p>
+                                <p className="text-slate-400 text-xs font-normal">Back to Patient Dashboard</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Doctor: decision screen ───────────────────────────────────────────────
     if (!decision) {
         return (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">

@@ -84,13 +84,13 @@ function AppRoutes() {
       {/* Doctor Routes */}
       <Route element={<ProtectedRoute allowedRoles={['doctor']} />}>
         <Route path="/dashboard/doctor/*" element={<DoctorDashboard />} />
-        <Route path="/consultation/summary/:appointmentId" element={<ConsultationSummary />} />
       </Route>
 
       {/* Shared Consultation Routes (Doctor + Patient) */}
       <Route element={<ProtectedRoute allowedRoles={['doctor', 'patient']} />}>
         <Route path="/consultation/voice/:appointmentId" element={<VoiceCall />} />
         <Route path="/consultation/video/:appointmentId" element={<VideoCall />} />
+        <Route path="/consultation/summary/:appointmentId" element={<ConsultationSummary />} />
       </Route>
 
       {/* Staff Routes */}

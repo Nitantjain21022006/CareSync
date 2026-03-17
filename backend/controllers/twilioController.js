@@ -65,10 +65,23 @@ export const generateVoiceToken = async (req, res) => {
         }
 
         // Time validation: allow 15 min before → 60 min after
-        const appointmentDate = new Date(appointment.date);
-        const timeParts = appointment.timeSlot.split(':');
-        appointmentDate.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), 0, 0);
-        const diff = (Date.now() - appointmentDate.getTime()) / (1000 * 60);
+        // IMPORTANT: appointment.date is stored as UTC midnight for a given calendar date.
+        // appointment.timeSlot (e.g. "10:30") is in IST (the user's local timezone).
+        // On the Render server (UTC), setHours() would apply hours in UTC — 5h30m off from IST.
+        // Fix: Extract the YYYY-MM-DD from the stored date in UTC, then treat the timeSlot as IST
+        // by subtracting the IST offset (330 min) to get the correct UTC epoch.
+        const storedDate = new Date(appointment.date);
+        // Get the calendar date as stored (UTC date parts represent the booked date in IST)
+        const yyyy = storedDate.getUTCFullYear();
+        const mm = String(storedDate.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(storedDate.getUTCDate()).padStart(2, '0');
+        const [slotHours, slotMinutes] = appointment.timeSlot.split(':').map(Number);
+        // Build a Date object: combine date + timeSlot as if it's IST, then convert to UTC
+        // IST = UTC+05:30, so UTC = IST - 330 minutes
+        const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 330 minutes in ms
+        const appointmentISTMs = Date.UTC(yyyy, parseInt(mm) - 1, parseInt(dd), slotHours, slotMinutes, 0, 0);
+        const appointmentUTCMs = appointmentISTMs - IST_OFFSET_MS;
+        const diff = (Date.now() - appointmentUTCMs) / (1000 * 60);
         if (diff < -15 || diff > 60) {
             return res.status(400).json({
                 message: 'Consultation can only be started within the scheduled time window (15 min before to 60 min after).'

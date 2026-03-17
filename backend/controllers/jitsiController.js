@@ -27,12 +27,22 @@ export const getJitsiRoom = async (req, res) => {
         }
 
         // 2. Time Validation (1-hour max window as requested)
-        const appointmentDate = new Date(appointment.date);
-        const [hours, minutes] = appointment.timeSlot.split(':');
-        appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        // IMPORTANT: appointment.date is stored as UTC midnight for a given calendar date.
+        // appointment.timeSlot (e.g. "10:30") is in IST (the user's local timezone).
+        // On the Render server (UTC), setHours() would apply hours in UTC — 5h30m off from IST.
+        // Fix: Extract UTC date parts and combine with timeSlot as IST, then convert to UTC.
+        const storedDate = new Date(appointment.date);
+        const yyyy = storedDate.getUTCFullYear();
+        const mm = storedDate.getUTCMonth(); // 0-indexed
+        const dd = storedDate.getUTCDate();
+        const [slotHours, slotMinutes] = appointment.timeSlot.split(':').map(Number);
+        // IST = UTC+05:30, so appointmentUTC = appointmentIST - 330min
+        const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+        const appointmentISTMs = Date.UTC(yyyy, mm, dd, slotHours, slotMinutes, 0, 0);
+        const appointmentUTCMs = appointmentISTMs - IST_OFFSET_MS;
 
         const now = new Date();
-        const diff = (now - appointmentDate) / (1000 * 60);
+        const diff = (now.getTime() - appointmentUTCMs) / (1000 * 60);
 
         // Window: 15 mins before to 60 mins after
         if (diff < -15 || diff > 60) {

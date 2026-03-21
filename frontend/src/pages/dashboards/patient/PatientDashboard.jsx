@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PatientDashboardLayout from '../../../components/layout/PatientDashboardLayout';
 import PatientOverview from './PatientOverview';
 import PatientRecords from './PatientRecords';
+import PatientMedications from './PatientMedications';
 import PatientAppointments from './PatientAppointments';
 import AIHealthAssistant from './AIHealthAssistant';
 import AccessControl from './AccessControl';
@@ -21,7 +22,8 @@ import {
     CalendarPlus,
     Users,
     CreditCard,
-    MessageCircle
+    MessageCircle,
+    Clipboard
 } from 'lucide-react';
 
 const patientLinks = [
@@ -34,6 +36,7 @@ const patientLinks = [
     { to: '/dashboard/patient/chat', label: 'Chat', icon: MessageCircle },
     { to: '/dashboard/patient/ai', label: 'AI Health Assistant', icon: MessageSquare },
     { to: '/dashboard/patient/access', label: 'Privacy & Access', icon: ShieldCheck },
+    { to: '/dashboard/patient/medications', label: 'Medications', icon: Clipboard },
     { to: '/dashboard/patient/profile', label: 'My Profile', icon: UserCircle },
 ];
 
@@ -50,6 +53,7 @@ const PatientDashboard = () => {
                 <Route path="ai" element={<AIHealthAssistant />} />
                 <Route path="access" element={<AccessControl />} />
                 <Route path="profile" element={<PatientProfile />} />
+                <Route path="medications" element={<PatientMedications />} />
                 <Route path="reserve" element={<ReserveSession />} />
                 <Route path="/" element={<Navigate to="overview" replace />} />
             </Routes>

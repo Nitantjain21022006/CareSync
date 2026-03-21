@@ -50,6 +50,13 @@ const appointmentSchema = new mongoose.Schema({
     duration: Number, // in minutes
     prescriptionUrl: String,
     consultationNotes: String,
+    medications: [{
+        name: { type: String, required: true },
+        dosage: String,
+        frequency: String,
+        duration: String,
+        instructions: String
+    }],
     payEnable: {
         type: Boolean,
         default: false

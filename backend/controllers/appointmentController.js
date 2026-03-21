@@ -23,6 +23,21 @@ export const getPatientUpcomingAppointments = async (req, res) => {
     }
 };
 
+// @desc    Get all appointment history for patient (including medications)
+// @route   GET /api/appointments/patient/history
+// @access  Private (Patient)
+export const getPatientAppointmentHistory = async (req, res) => {
+    try {
+        const appointments = await Appointment.find({
+            patient: req.user.id
+        }).populate('doctor', 'fullName email metadata');
+
+        res.status(200).json({ success: true, count: appointments.length, data: appointments });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
 // @desc    Book an appointment
 // @route   POST /api/appointments/book
 // @access  Private (Patient)

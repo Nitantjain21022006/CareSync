@@ -93,12 +93,15 @@ CareSync provides four distinct, high-aesthetic dashboards tailored to specific 
 - **Privacy Shield Control**: Monitor every access attempt and revoke clinician access instantly.
 - **Biometric Logs**: Real-time sync of Weight, BP, and Height directly from clinician updates.
 - **Clinical Vault**: Consolidated view of prescriptions, lab reports, and imaging.
+- **Medicine Dosage Tracking**: Real-time tracking of prescribed medications with structured dosage and instructions.
+- **MediStock Integration**: Direct "One-Click Order" link to MediStock for easy medicine procurement.
 
 ### 2. Physician Portal (Clinical Precision)
 - **Authorized Patient View**: Deep-dive into records for patients who granted access.
 - **Clinical Collaboration**: Share complex cases with authorized peers for second opinions.
 - **Appointment Management**: Adaptive scheduling with AI-driven "No-Show" probability metrics.
 - **Biometric Update**: Directly update patient vitals during consultations.
+- **Structured Prescribing**: Add medicines with specific dosages, frequencies, and durations to patient records.
 
 ### 3. Hospital Staff Portal (Operational Efficiency)
 - **Patient Onboarding**: Secure invitation system for new clinical entities.

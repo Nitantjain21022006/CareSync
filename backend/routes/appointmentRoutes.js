@@ -9,6 +9,7 @@ import {
     getStaffStats,
     getPendingAppointments,
     getStaffTodayAppointments,
+    getPatientAppointmentHistory,
     updateAppointmentStatus,
     requestReschedule,
     respondReschedule
@@ -19,6 +20,7 @@ const router = express.Router();
 
 router.post('/book', protect, authorize('patient'), bookAppointment);
 router.get('/patient/upcoming', protect, authorize('patient'), getPatientUpcomingAppointments);
+router.get('/patient/history', protect, authorize('patient'), getPatientAppointmentHistory);
 router.get('/doctor', protect, authorize('doctor'), getDoctorAppointments);
 router.get('/doctor/today', protect, authorize('doctor'), getDoctorTodayAppointments);
 router.get('/doctor/stats', protect, authorize('doctor'), getDoctorStats);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../config/api';
 import { useAuth } from '../context/AuthContext';
-import { FileText, Upload, Save, CheckCircle, Loader2, Clipboard } from 'lucide-react';
+import { FileText, Upload, Save, CheckCircle, Loader2, Clipboard, Plus, X, Pill } from 'lucide-react';
 
 const ConsultationSummary = () => {
     const { appointmentId } = useParams();
@@ -14,6 +14,7 @@ const ConsultationSummary = () => {
 
     const [notes, setNotes] = useState('');
     const [prescription, setPrescription] = useState(null);
+    const [medications, setMedications] = useState([{ name: '', dosage: '', frequency: '', duration: '', instructions: '' }]);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
@@ -21,6 +22,20 @@ const ConsultationSummary = () => {
 
     const handleFileChange = (e) => {
         setPrescription(e.target.files[0]);
+    };
+
+    const addMedication = () => {
+        setMedications([...medications, { name: '', dosage: '', frequency: '', duration: '', instructions: '' }]);
+    };
+
+    const removeMedication = (index) => {
+        setMedications(medications.filter((_, i) => i !== index));
+    };
+
+    const handleMedChange = (index, field, value) => {
+        const updated = [...medications];
+        updated[index][field] = value;
+        setMedications(updated);
     };
 
     const handleContinue = () => {
@@ -38,7 +53,8 @@ const ConsultationSummary = () => {
                 appointmentId,
                 notes,
                 duration: Math.round(duration / 60), // minutes
-                status: 'completed'
+                status: 'completed',
+                medications: medications.filter(m => m.name.trim() !== '')
             });
 
             if (prescription) {
@@ -194,6 +210,87 @@ const ConsultationSummary = () => {
                             placeholder="Detail diagnosis, advice, and internal clinical notes..."
                             className="w-full h-64 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 outline-none transition-all resize-none font-medium text-slate-700 leading-relaxed"
                         ></textarea>
+                    </div>
+
+                    {/* Structured Medications Section */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Structured Medication & Dosage</label>
+                            <button
+                                type="button"
+                                onClick={addMedication}
+                                className="flex items-center gap-2 text-indigo-600 font-bold text-xs hover:text-indigo-700 transition-colors bg-indigo-50 px-4 py-2 rounded-xl"
+                            >
+                                <Plus size={14} /> Add Medicine
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            {medications.map((med, idx) => (
+                                <div key={idx} className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative group animate-in slide-in-from-right-4 duration-300">
+                                    <button
+                                        type="button"
+                                        onClick={() => removeMedication(idx)}
+                                        className="absolute top-6 right-6 p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div className="space-y-1.5 md:col-span-2 lg:col-span-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Medicine Name</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Paracetamol"
+                                                className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                                                value={med.name}
+                                                onChange={(e) => handleMedChange(idx, 'name', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dosage</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. 500mg"
+                                                className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                                                value={med.dosage}
+                                                onChange={(e) => handleMedChange(idx, 'dosage', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Frequency</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. 2x Daily"
+                                                className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                                                value={med.frequency}
+                                                onChange={(e) => handleMedChange(idx, 'frequency', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Duration</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. 5 Days"
+                                                className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                                                value={med.duration}
+                                                onChange={(e) => handleMedChange(idx, 'duration', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 md:col-span-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Special Instructions</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Take after meals"
+                                                className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium text-slate-900 focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                                                value={med.instructions}
+                                                onChange={(e) => handleMedChange(idx, 'instructions', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     <div>

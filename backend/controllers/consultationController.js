@@ -4,7 +4,7 @@ import { sendEmail } from '../utils/email.js';
 
 export const saveConsultationSummary = async (req, res) => {
     try {
-        const { appointmentId, notes, duration, status } = req.body;
+        const { appointmentId, notes, duration, status, medications } = req.body;
         const user = req.user;
 
         // Only doctors can save summaries
@@ -25,6 +25,7 @@ export const saveConsultationSummary = async (req, res) => {
         }
 
         appointment.consultationNotes = notes;
+        appointment.medications = medications;
         appointment.duration = duration;
         appointment.consultationStatus = status || 'completed';
         appointment.status = 'completed'; // Update general appointment status too

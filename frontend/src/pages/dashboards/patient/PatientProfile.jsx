@@ -314,7 +314,7 @@ const PatientProfile = () => {
                                         ) : (
                                             <button
                                                 onClick={() => setIsGlobalEdit(true)}
-                                                className="px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-black transition-all shadow-md flex items-center gap-2 font-bold text-xs"
+                                                className="px-5 py-2.5 bg-[#164237] text-white rounded-xl hover:bg-[#2D7D6F] transition-all shadow-md flex items-center gap-2 font-bold text-xs"
                                             >
                                                 <Edit2 size={14} />
                                                 Edit Profile
@@ -461,7 +461,7 @@ const PatientProfile = () => {
 
                         <button
                             onClick={() => setIsAppointmentModalOpen(true)}
-                            className="w-full mt-6 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2"
+                            className="w-full mt-6 py-3.5 bg-[#164237] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-md flex items-center justify-center gap-2"
                         >
                             Request Scheduling <ArrowUpRight size={14} />
                         </button>

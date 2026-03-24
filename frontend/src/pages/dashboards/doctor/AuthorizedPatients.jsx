@@ -203,7 +203,7 @@ const AuthorizedPatients = () => {
                     ) : (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center gap-2"
+                            className="px-6 py-3 bg-[#164237] text-white font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-md flex items-center gap-2"
                         >
                             <Settings size={16} /> Edit Profile
                         </button>
@@ -332,7 +332,7 @@ const AuthorizedPatients = () => {
 
                 {/* Meta Card */}
                 <div className="space-y-6">
-                    <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+                    <div className="bg-[#164237] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-16 -mt-16" />
                         <div className="bg-white/5 border border-white/10 p-4 rounded-xl w-fit mb-6 relative z-10 shadow-inner">
                             <Lock size={24} className="text-emerald-400" />
@@ -377,7 +377,7 @@ const AuthorizedPatients = () => {
                         <button
                             onClick={handleUpdateVitals}
                             disabled={submitting}
-                            className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50"
+                            className="w-full py-3 bg-[#164237] text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-md disabled:opacity-50"
                         >
                             {submitting ? 'Updating...' : 'Sync Biometrics'}
                         </button>
@@ -401,7 +401,7 @@ const AuthorizedPatients = () => {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setIsCreationModalOpen(true)}
-                                className="px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center gap-2"
+                                className="px-6 py-2.5 bg-[#164237] text-white font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-md flex items-center gap-2"
                             >
                                 <Plus size={16} /> Create Patient
                             </button>
@@ -455,7 +455,7 @@ const AuthorizedPatients = () => {
                                                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">VERIFIED</span>
                                             </div>
                                         </div>
-                                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm group-hover:translate-x-1">
+                                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 group-hover:bg-[#164237] group-hover:text-white group-hover:border-[#164237] transition-all shadow-sm group-hover:translate-x-1">
                                             <ChevronRight size={18} />
                                         </div>
                                     </div>
@@ -623,7 +623,7 @@ const AuthorizedPatients = () => {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                    className="w-full py-5 bg-[#164237] text-white font-black rounded-2xl shadow-xl hover:bg-[#2D7D6F] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                                 >
                                     {submitting ? 'INITIATING...' : 'SEND CREATION REQUEST'}
                                     <Send size={16} />

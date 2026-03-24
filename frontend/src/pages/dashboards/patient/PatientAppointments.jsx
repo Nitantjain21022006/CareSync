@@ -251,7 +251,7 @@ const PatientAppointments = () => {
                                                 setSelectedAppt(appt);
                                                 setIsDetailsModalOpen(true);
                                             }}
-                                            className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md"
+                                            className="flex-1 md:flex-none px-6 py-3 bg-[#164237] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-md"
                                         >
                                             {['confirmed', 'scheduled', 'waiting', 'checked-in', 'in-progress'].includes(appt.status) ? 'Join Session' : 'Details'}
                                         </button>
@@ -269,7 +269,7 @@ const PatientAppointments = () => {
                                     <p className="text-slate-400 font-bold text-xs mt-3 uppercase tracking-widest max-w-xs mx-auto">Your medical agenda is currently clear. Initialize a new session to begin.</p>
                                     <Link
                                         to="/dashboard/patient/reserve"
-                                        className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-emerald-600 transition-all inline-flex items-center gap-3 group/btn"
+                                        className="mt-10 px-10 py-4 bg-[#164237] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-emerald-600 transition-all inline-flex items-center gap-3 group/btn"
                                     >
                                         Initiate Session
                                         <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
@@ -282,7 +282,7 @@ const PatientAppointments = () => {
 
                 {/* Side Content */}
                 <div className="space-y-6">
-                    <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col items-center text-center">
+                    <div className="bg-[#164237] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col items-center text-center">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-16 -mt-16" />
                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-white/10">
                             <Video size={28} className="text-white" />
@@ -347,7 +347,7 @@ const PatientAppointments = () => {
 
                                             <button
                                                 onClick={() => setIsDetailsModalOpen(false)}
-                                                className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-black transition-all shadow-xl"
+                                                className="w-full mt-8 py-4 bg-[#164237] text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-[#2D7D6F] transition-all shadow-xl"
                                             >
                                                 Close Details
                                             </button>

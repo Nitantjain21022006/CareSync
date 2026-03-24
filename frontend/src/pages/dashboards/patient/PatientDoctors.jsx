@@ -184,7 +184,7 @@ const PatientDoctors = () => {
 
                     {/* Meta Card */}
                     <div className="space-y-6 text-left">
-                        <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+                        <div className="bg-[#164237] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-16 -mt-16" />
                             <h4 className="text-sm font-bold tracking-[0.2em] uppercase text-emerald-500 mb-6">Contact Matrix</h4>
                             <div className="space-y-5 relative z-10">
@@ -311,7 +311,7 @@ const PatientDoctors = () => {
                                         <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">AUTHORIZED</span>
                                     </div>
                                 </div>
-                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm group-hover:translate-x-1">
+                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 group-hover:bg-[#164237] group-hover:text-white group-hover:border-[#164237] transition-all shadow-sm group-hover:translate-x-1">
                                     <ChevronRight size={18} />
                                 </div>
                             </div>

@@ -78,8 +78,8 @@ const StaffOverview = () => {
                 </div>
                 <div className="flex gap-3">
                     <div className="bg-white border border-[#E2E8F0] rounded-2xl p-1.5 flex gap-1 shadow-sm">
-                        <button className="px-4 py-2 bg-[#1A202C] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg">Today</button>
-                        <button className="px-4 py-2 text-[#A0AEC0] hover:text-[#1A202C] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Weekly</button>
+                        <button className="px-4 py-2 bg-[#164237] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg">Today</button>
+                        <button className="px-4 py-2 text-[#A0AEC0] hover:text-[#164237] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Weekly</button>
                     </div>
                 </div>
             </div>
@@ -181,7 +181,7 @@ const StaffOverview = () => {
                 {/* Side Content */}
                 <div className="space-y-8">
                     {/* Quick Intake Dashboard */}
-                    <div className="bg-[#1A202C] rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+                    <div className="bg-[#164237] rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -z-0"></div>
                         <h3 className="text-xl font-black mb-6 relative z-10 flex items-center justify-between">
                             Intake Tools

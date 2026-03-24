@@ -114,16 +114,15 @@ const PatientFolderCard = ({ patient }) => (
     <Link to={`/dashboard/doctor/patients`} className="block">
         <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center gap-4 cursor-pointer group">
             <div className="w-full aspect-[4/3] relative">
-                <div className="absolute inset-0 bg-[#FFD966] rounded-2xl border-2 border-slate-200 shadow-sm">
-                    <div className="w-1/2 h-4 bg-[#FFD966] rounded-t-[12px] -mt-3.5 ml-4 border-t-2 border-x-2 border-slate-200" />
-                </div>
-                <div className="absolute inset-x-0 bottom-0 top-3 bg-[#FFE599] rounded-[20px] shadow-lg border-t-2 border-white/40 transform origin-bottom group-hover:rotate-x-12 transition-transform duration-500 flex flex-col items-center justify-center p-4">
-                    <div className="text-4xl drop-shadow-md group-hover:scale-110 transition-transform">👤</div>
+                <div className="absolute inset-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col items-center justify-center group-hover:border-[#2D7D6F] transition-colors">
+                     <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#2D7D6F] flex items-center justify-center mb-2 group-hover:bg-[#2D7D6F] group-hover:text-white transition-all">
+                        <Users size={20} />
+                     </div>
                 </div>
             </div>
             <div className="text-center w-full px-2">
                 <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tighter">{(patient.fullName || 'Patient').split(' ')?.[0] || 'Patient'}</p>
-                <p className="text-[9px] font-bold text-emerald-700 opacity-60 uppercase tracking-widest truncate">Verified Profile</p>
+                <p className="text-[9px] font-bold text-[#2D7D6F] opacity-80 uppercase tracking-widest truncate">Clinical Record</p>
             </div>
         </motion.div>
     </Link>
@@ -312,7 +311,7 @@ const DoctorOverview = () => {
                 {/* Side Content */}
                 <div className="space-y-8">
                     {/* Today's Queue Card */}
-                    <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <div className="bg-[#164237] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-16 -mt-16" />
                         <h3 className="text-xl font-bold mb-6 flex items-center justify-between relative z-10">
                             Today's Queue
@@ -389,7 +388,7 @@ const DoctorOverview = () => {
             >
                 <div className="flex justify-between items-center px-6">
                     <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase border-l-8 border-emerald-500 pl-8">Clinical Registry</h2>
-                    <Link to="/dashboard/doctor/patients" className="p-3 bg-slate-900 text-white rounded-xl hover:rotate-6 transition-all shadow-md">
+                    <Link to="/dashboard/doctor/patients" className="p-3 bg-[#164237] text-white rounded-xl hover:bg-[#2D7D6F] transition-all shadow-md">
                         <Users size={20} />
                     </Link>
                 </div>

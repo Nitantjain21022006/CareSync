@@ -305,7 +305,7 @@ const PatientOverview = () => {
                             </div>
                             <button
                                 onClick={() => setIsAddDoctorOpen(true)}
-                                className="p-3 bg-slate-900 text-white rounded-xl hover:rotate-6 transition-all shadow-md"
+                                className="p-3 bg-[#164237] text-white rounded-xl hover:bg-[#2D7D6F] transition-all shadow-md"
                             >
                                 <Search size={20} />
                             </button>
@@ -316,11 +316,10 @@ const PatientOverview = () => {
                                 {doctors.map(doc => (
                                     <Link key={doc._id} to={`/dashboard/patient/doctors?doctorId=${doc._id}`} className="flex flex-col items-center gap-3 group animate-in fade-in zoom-in duration-300">
                                         <div className="w-full aspect-[4/3] relative">
-                                            <div className="absolute inset-0 bg-[#FFD966] rounded-2xl border-2 border-slate-200 shadow-sm">
-                                                <div className="w-1/2 h-4 bg-[#FFD966] rounded-t-[12px] -mt-3.5 ml-4 border-t-2 border-x-2 border-slate-200" />
-                                            </div>
-                                            <div className="absolute inset-x-0 bottom-0 top-3 bg-[#FFE599] rounded-[20px] shadow-lg border-t-2 border-white/40 transform origin-bottom group-hover:rotate-x-12 transition-transform duration-500 flex flex-col items-center justify-center p-4">
-                                                <div className="text-4xl drop-shadow-md group-hover:scale-110 transition-transform">👨‍⚕️</div>
+                                            <div className="absolute inset-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col items-center justify-center group-hover:border-[#2D7D6F] transition-colors">
+                                                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#2D7D6F] flex items-center justify-center mb-2 group-hover:bg-[#2D7D6F] group-hover:text-white transition-all">
+                                                    <Activity size={20} />
+                                                 </div>
                                             </div>
                                         </div>
                                         <div className="text-center w-full px-2">
@@ -365,7 +364,7 @@ const PatientOverview = () => {
                                         <p className="text-slate-400 font-bold text-xs mt-3 uppercase tracking-widest max-w-xs mx-auto">Your medical agenda is currently clear. Initialize a new session to begin.</p>
                                         <Link
                                             to="/dashboard/patient/reserve"
-                                            className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-emerald-600 transition-all inline-flex items-center gap-3 group/btn"
+                                            className="mt-10 px-10 py-4 bg-[#164237] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-[#2D7D6F] transition-all inline-flex items-center gap-3 group/btn"
                                         >
                                             Initiate Session
                                             <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
@@ -379,7 +378,7 @@ const PatientOverview = () => {
 
                 {/* Biometrics & AI */}
                 <div className="space-y-6">
-                    <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col items-center text-center">
+                    <div className="bg-[#164237] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col items-center text-center">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-16 -mt-16" />
                         <h4 className="text-[11px] font-bold uppercase tracking-widest mb-8 text-slate-400 relative z-10">CareNexus AI Wellness</h4>
 
@@ -468,7 +467,7 @@ const PatientOverview = () => {
                                             </div>
                                             <button
                                                 onClick={() => handleAddDoctor(doc._id)}
-                                                className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black rounded-xl hover:bg-black transition-all flex items-center gap-2"
+                                                className="px-5 py-2.5 bg-[#164237] text-white text-[10px] font-black rounded-xl hover:bg-[#2D7D6F] transition-all flex items-center gap-2"
                                             >
                                                 ADD <Zap size={12} />
                                             </button>

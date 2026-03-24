@@ -189,7 +189,7 @@ const ConsultationSharing = () => {
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
                                 disabled={isSharing}
-                                className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-lg disabled:opacity-50"
+                                className="w-full py-4 bg-[#164237] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-lg disabled:opacity-50"
                             >
                                 {isSharing ? 'EXECUTING SYNC...' : (
                                     <>
@@ -226,7 +226,7 @@ const ConsultationSharing = () => {
                                                         {new Date(consult.createdAt).toLocaleDateString()}
                                                     </span>
                                                 </div>
-                                                <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm">
+                                                <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-[#164237] group-hover:text-white transition-all shadow-sm">
                                                     <ArrowUpRight size={14} />
                                                 </div>
                                             </div>

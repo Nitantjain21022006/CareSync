@@ -134,7 +134,7 @@ const AdminOverview = () => {
                     value={formatCurrency(stats.totalRevenue)}
                     subValue="Fiscal performance"
                     icon={DollarSign}
-                    color="bg-purple-500"
+                    color="bg-emerald-600"
                 />
                 <StatCard
                     title="Network Health"
@@ -207,7 +207,7 @@ const AdminOverview = () => {
 
                 <div className="space-y-8">
                     {/* Activity Feed */}
-                    <div className="bg-[#1A202C] rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                    <div className="bg-[#164237] rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#2D7D6F]/20 rounded-bl-full -z-0"></div>
                         <h3 className="text-xl font-black mb-6 relative z-10 flex items-center justify-between">
                             System Events
@@ -246,9 +246,9 @@ const AdminOverview = () => {
                         <div className="grid grid-cols-2 gap-4">
                             {[
                                 { label: 'Audit Logs', color: 'bg-emerald-100', path: '/dashboard/admin/logs' },
-                                { label: 'Healthcare', color: 'bg-amber-50', path: '/dashboard/admin/analytics' },
-                                { label: 'Users', color: 'bg-emerald-50', path: '/dashboard/admin/users' },
-                                { label: 'Overview', color: 'bg-purple-50', path: '/dashboard/admin' }
+                                { label: 'Healthcare', color: 'bg-emerald-50', path: '/dashboard/admin/analytics' },
+                                { label: 'Users', color: 'bg-emerald-100', path: '/dashboard/admin/users' },
+                                { label: 'Overview', color: 'bg-emerald-50', path: '/dashboard/admin' }
                             ].map((item, i) => (
                                 <button
                                     key={i}

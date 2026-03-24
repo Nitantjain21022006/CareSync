@@ -174,7 +174,7 @@ const PatientRecords = () => {
                                 key={cat.id}
                                 onClick={() => setFilterType(cat.id)}
                                 className={`px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border ${filterType === cat.id
-                                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                                    ? 'bg-[#164237] text-white border-[#164237] shadow-md'
                                     : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
                                     }`}
                             >
@@ -285,7 +285,7 @@ const PatientRecords = () => {
                             <p className="text-slate-400 font-bold text-xs mt-3 uppercase tracking-widest max-w-sm mx-auto">No clinical entries discovered. Securely upload your first document to populate your record.</p>
                             <button
                                 onClick={() => setIsUploadModalOpen(true)}
-                                className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-emerald-600 transition-all inline-flex items-center gap-3 group/btn"
+                                className="mt-10 px-10 py-4 bg-[#164237] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-emerald-600 transition-all inline-flex items-center gap-3 group/btn"
                             >
                                 Secure Upload
                                 <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
@@ -388,7 +388,7 @@ const PatientRecords = () => {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2 group disabled:opacity-50"
+                                        className="w-full py-4 bg-[#164237] text-white rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-lg flex items-center justify-center gap-2 group disabled:opacity-50"
                                     >
                                         <span>{submitting ? 'Uploading...' : 'Securely Upload Record'}</span>
                                         <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />

@@ -127,7 +127,7 @@ const AccessRequests = () => {
                                     key={patient._id}
                                     onClick={() => setSelectedPatient(patient)}
                                     className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all ${selectedPatient?._id === patient._id
-                                        ? 'bg-slate-900 border-slate-900 text-white shadow-md scale-[1.02]'
+                                        ? 'bg-[#164237] border-[#164237] text-white shadow-md scale-[1.02]'
                                         : 'bg-white border-slate-100 text-slate-500 hover:border-emerald-200'
                                         }`}
                                 >
@@ -199,7 +199,7 @@ const AccessRequests = () => {
                                         className="p-6 flex items-center justify-between hover:bg-slate-50 transition-all group"
                                     >
                                         <div className="flex items-center gap-4 min-w-0">
-                                            <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm">
+                                            <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-[#164237] group-hover:text-white group-hover:border-[#164237] transition-all shadow-sm">
                                                 <UserSearch size={18} />
                                             </div>
                                             <div className="min-w-0">

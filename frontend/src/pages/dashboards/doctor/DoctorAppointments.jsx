@@ -23,6 +23,8 @@ const DoctorAppointments = () => {
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [selectedAppt, setSelectedAppt] = useState(null);
     const [note, setNote] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
 
     const fetchAppointments = async () => {
         try {
@@ -107,7 +109,20 @@ const DoctorAppointments = () => {
             activeTab === 'pending' ? pendingAppts : confirmedAppts
     ).filter(a =>
         a.patient?.fullName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ).sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        if (dateB !== dateA) return dateB - dateA;
+        if (a.timeSlot && b.timeSlot) return b.timeSlot.localeCompare(a.timeSlot);
+        return 0;
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredAppts.length / itemsPerPage));
+    const paginatedAppts = filteredAppts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchQuery]);
 
     return (
         <div className="space-y-8 pb-10 max-w-7xl mx-auto">
@@ -122,9 +137,18 @@ const DoctorAppointments = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="flex p-1 bg-slate-50 rounded-xl w-full sm:w-auto">
                     <button
+                        onClick={() => setActiveTab('all')}
+                        className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'all'
+                            ? 'bg-white text-[#2D7D6F] shadow-sm'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                    >
+                        All ({appointments.length})
+                    </button>
+                    <button
                         onClick={() => setActiveTab('pending')}
                         className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'pending'
-                            ? 'bg-white text-emerald-600 shadow-sm'
+                            ? 'bg-white text-[#2D7D6F] shadow-sm'
                             : 'text-slate-400 hover:text-slate-600'
                             }`}
                     >
@@ -133,20 +157,11 @@ const DoctorAppointments = () => {
                     <button
                         onClick={() => setActiveTab('confirmed')}
                         className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'confirmed'
-                            ? 'bg-white text-emerald-600 shadow-sm'
+                            ? 'bg-white text-[#2D7D6F] shadow-sm'
                             : 'text-slate-400 hover:text-slate-600'
                             }`}
                     >
                         Confirmed ({confirmedAppts.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'all'
-                            ? 'bg-white text-emerald-600 shadow-sm'
-                            : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                    >
-                        All ({appointments.length})
                     </button>
                 </div>
                 <div className="relative w-full sm:w-72 mt-2 sm:mt-0">
@@ -168,8 +183,8 @@ const DoctorAppointments = () => {
                         [1, 2, 3].map(i => (
                             <div key={i} className="h-64 bg-white border border-slate-100 rounded-3xl animate-pulse" />
                         ))
-                    ) : filteredAppts.length > 0 ? (
-                        filteredAppts.map(appt => (
+                    ) : paginatedAppts.length > 0 ? (
+                        paginatedAppts.map(appt => (
                             <motion.div
                                 key={appt._id}
                                 layout
@@ -312,6 +327,30 @@ const DoctorAppointments = () => {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-8 pt-6 border-t border-slate-200">
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                        Previous
+                    </button>
+                    <span className="text-sm font-bold text-[#2D7D6F]">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
+
 
             {/* Note Modal */}
             <AnimatePresence>

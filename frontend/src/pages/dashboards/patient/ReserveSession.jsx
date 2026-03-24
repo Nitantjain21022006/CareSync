@@ -199,7 +199,7 @@ const ReserveSession = () => {
                     <div className="pt-8 border-t border-slate-100">
                         <button
                             type="submit"
-                            className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-black transition-all shadow-lg flex items-center justify-center gap-3 group"
+                            className="w-full py-4 bg-[#164237] text-white rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-[#2D7D6F] transition-all shadow-lg flex items-center justify-center gap-3 group"
                         >
                             Confirm Booking Request
                             <CalendarPlus size={20} className="group-hover:scale-110 transition-transform" />

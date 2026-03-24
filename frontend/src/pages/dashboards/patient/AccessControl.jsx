@@ -161,7 +161,7 @@ const AccessControl = () => {
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className={`p-8 rounded-[30px] flex items-center justify-between shadow-3xl mb-8 ${message.type === 'success' ? 'bg-slate-900 text-white shadow-emerald-500/20' : 'bg-rose-600 text-white shadow-rose-500/20'
+                        className={`p-8 rounded-[30px] flex items-center justify-between shadow-3xl mb-8 ${message.type === 'success' ? 'bg-[#164237] text-white shadow-emerald-500/20' : 'bg-rose-600 text-white shadow-rose-500/20'
                             }`}>
                         <div className="flex items-center gap-6">
                             {message.type === 'success' ? <UserCheck className="h-7 w-7 text-emerald-400" /> : <ShieldAlert className="h-7 w-7 text-rose-200" />}
@@ -190,7 +190,7 @@ const AccessControl = () => {
                             >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-50" />
                                 <div className="flex items-center gap-6 mb-6">
-                                    <div className="h-16 w-16 rounded-[22px] bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 font-black shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
+                                    <div className="h-16 w-16 rounded-[22px] bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 font-black shadow-sm group-hover:bg-[#164237] group-hover:text-white transition-all transform group-hover:rotate-3">
                                         {req.doctor?.fullName?.[0]}
                                     </div>
                                     <div className="flex-1">
@@ -240,7 +240,7 @@ const AccessControl = () => {
                             >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-[40px] -mr-16 -mt-16 opacity-50" />
                                 <div className="flex items-center gap-6 mb-6">
-                                    <div className="h-16 w-16 rounded-[22px] bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
+                                    <div className="h-16 w-16 rounded-[22px] bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black shadow-sm group-hover:bg-[#164237] group-hover:text-white transition-all transform group-hover:rotate-3">
                                         {req.doctor?.fullName?.[0]}
                                     </div>
                                     <div className="flex-1">
@@ -261,7 +261,7 @@ const AccessControl = () => {
                                     </button>
                                     <button
                                         onClick={() => handleResponseToCreationRequest(req._id, 'approved')}
-                                        className="flex-[2] py-4 bg-slate-900 text-white hover:bg-black rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3"
+                                        className="flex-[2] py-4 bg-[#164237] text-white hover:bg-[#2D7D6F] rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3"
                                     >
                                         <CheckCircle2 size={16} /> INITIALIZE_CARE
                                     </button>
@@ -301,7 +301,7 @@ const AccessControl = () => {
                                         className="p-10 flex items-center justify-between hover:bg-slate-50 transition-all group"
                                     >
                                         <div className="flex items-center gap-6">
-                                            <div className="h-16 w-16 rounded-[22px] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all transform group-hover:rotate-3">
+                                            <div className="h-16 w-16 rounded-[22px] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black shadow-inner group-hover:bg-[#164237] group-hover:text-white transition-all transform group-hover:rotate-3">
                                                 {doc.fullName?.[0]}
                                             </div>
                                             <div>
@@ -369,7 +369,7 @@ const AccessControl = () => {
                                         className="p-8 bg-slate-50/30 border border-transparent rounded-[30px] flex items-center justify-between hover:border-emerald-200 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/5 transition-all group relative z-10"
                                     >
                                         <div className="flex items-center gap-6">
-                                            <div className="h-14 w-14 rounded-[20px] bg-white flex items-center justify-center text-slate-300 font-black border border-slate-100 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm transform group-hover:-rotate-3">
+                                            <div className="h-14 w-14 rounded-[20px] bg-white flex items-center justify-center text-slate-300 font-black border border-slate-100 group-hover:bg-[#164237] group-hover:text-white group-hover:border-[#164237] transition-all shadow-sm transform group-hover:-rotate-3">
                                                 {doc.fullName?.[0]}
                                             </div>
                                             <div>
@@ -447,7 +447,7 @@ const AccessControl = () => {
                                         className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors group"
                                     >
                                         <div className="flex items-center gap-6">
-                                            <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-slate-900 group-hover:text-white transition-all">
+                                            <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-[#164237] group-hover:text-white transition-all">
                                                 {log.doctor?.fullName?.[0]}
                                             </div>
                                             <div>
@@ -495,7 +495,7 @@ const AccessControl = () => {
                                         <button
                                             key={i}
                                             onClick={() => setPagination(prev => ({ ...prev, currentPage: i + 1 }))}
-                                            className={`h-2 w-2 rounded-full transition-all ${pagination.currentPage === i + 1 ? 'w-8 bg-slate-900' : 'bg-slate-200 hover:bg-slate-400'
+                                            className={`h-2 w-2 rounded-full transition-all ${pagination.currentPage === i + 1 ? 'w-8 bg-[#164237]' : 'bg-slate-200 hover:bg-slate-400'
                                                 }`}
                                         />
                                     ))}

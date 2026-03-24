@@ -225,7 +225,7 @@ const HealthcareAnalytics = () => {
                     change="+2.4%"
                     isPositive={true}
                     icon={Users}
-                    color="bg-slate-900 text-slate-900"
+                    color="bg-[#164237] text-slate-900"
                 />
             </div>
 

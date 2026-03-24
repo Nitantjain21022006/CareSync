@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Building2, Stethoscope, ShieldCheck, ArrowRight, Lock, Mail } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../config/api';
 
 const roles = [
@@ -14,8 +14,16 @@ const roles = [
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
-    const [selectedRole, setSelectedRole] = useState(null);
+    
+    const [selectedRole, setSelectedRole] = useState(() => {
+        const params = new URLSearchParams(location.search);
+        const role = params.get('role');
+        const validRoles = roles.map(r => r.id);
+        return (role && validRoles.includes(role)) ? role : null;
+    });
+    
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -78,18 +86,16 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div className="relative z-10">
+                    <div className="relative z-10 mt-auto">
                         <div className="p-5 bg-white/5 rounded-[28px] border border-white/10 backdrop-blur-md">
                             <div className="flex items-center gap-4 mb-3">
-                                <div className="flex -space-x-3">
-                                    {[1, 2, 3].map(idx => (
-                                        <img key={idx} className="w-8 h-8 rounded-full border-2 border-[#059669] shadow-lg" src={`https://i.pravatar.cc/100?u=doc-${idx}`} alt="user" />
-                                    ))}
+                                <div className="p-2 bg-emerald-500/20 rounded-xl text-emerald-300">
+                                    <ShieldCheck size={28} />
                                 </div>
                                 <div className="h-px flex-1 bg-white/10" />
                             </div>
                             <div className="space-y-0.5">
-                                <p className="text-xs font-black text-white/90">Trusted by Experts</p>
+                                <p className="text-sm font-black text-white/90">Enterprise Grade Security</p>
                                 <p className="text-[10px] font-bold text-emerald-300/60 uppercase tracking-widest">Global Medical Compliance</p>
                             </div>
                         </div>
@@ -137,11 +143,11 @@ const Login = () => {
                                             : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 hover:bg-white'
                                             }`}
                                     >
-                                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-2 transition-all duration-500 ${selectedRole === role.id ? 'bg-emerald-600 text-white shadow-xl scale-110 rotate-3' : 'bg-white text-slate-400 shadow-sm group-hover:scale-110'
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-500 ${selectedRole === role.id ? 'bg-emerald-600 text-white shadow-xl scale-110 rotate-3' : 'bg-white text-slate-400 shadow-sm group-hover:scale-110'
                                             }`}>
-                                            <role.icon size={22} strokeWidth={2.5} />
+                                            <role.icon size={28} strokeWidth={2.5} />
                                         </div>
-                                        <span className={`text-[8px] font-black uppercase tracking-[0.15em] ${selectedRole === role.id ? 'text-emerald-700' : 'text-slate-500'
+                                        <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${selectedRole === role.id ? 'text-emerald-700' : 'text-slate-500'
                                             }`}>
                                             {selectedRole === role.id ? `${role.id} active` : role.id}
                                         </span>
@@ -229,19 +235,7 @@ const Login = () => {
                                             </div>
                                         </button>
                                     </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="placeholder"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className="py-16 text-center bg-slate-50/50 rounded-[32px] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center space-y-3"
-                                    >
-                                        <div className="w-12 h-12 rounded-2xl bg-white shadow-lg flex items-center justify-center text-slate-200 animate-pulse">
-                                            <Lock size={24} />
-                                        </div>
-                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] max-w-[200px] leading-loose">Select Security Clearance Role</p>
-                                    </motion.div>
-                                )}
+                                ) : null}
                             </AnimatePresence>
                         </form>
                     </main>

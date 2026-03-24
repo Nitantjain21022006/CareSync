@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Activity, User, Stethoscope, Building2, MapPin, Phone, Mail, Clock } from 'lucide-react';
 import api from '../config/api';
 
 const Landing = () => {
@@ -26,10 +28,8 @@ const Landing = () => {
             {/* Navigation */}
             <nav className="flex items-center justify-between px-6 py-4 md:px-16 bg-white border-b border-[#E2E8F0] sticky top-0 z-50 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#2D7D6F] rounded-lg flex items-center justify-center shadow-md shadow-[#2D7D6F]/10">
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a1 1 0 011 1v2a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-2a1 1 0 100 2h2zm-7 4a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H2a1 1 0 100 2h2z" />
-                        </svg>
+                    <div className="w-10 h-10 bg-[#2D7D6F] rounded-lg flex items-center justify-center shadow-md shadow-[#2D7D6F]/10 font-black text-xl text-white">
+                        M
                     </div>
                     <span className="text-2xl font-black text-[#2D7D6F] tracking-tight">CareSync</span>
                 </div>
@@ -65,12 +65,12 @@ const Landing = () => {
                             CareSync brings precision to healthcare management. A unified ecosystem for hospitals, doctor suites, and patient recovery.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                            <Link to="/signup" className="w-full sm:w-auto px-10 py-4 bg-[#2D7D6F] text-white font-black rounded-xl shadow-2xl hover:bg-[#246A5E] transition-all transform hover:-translate-y-1 active:scale-95 text-lg text-center">
+                            <Link to="/login?role=patient" className="w-full sm:w-auto px-10 py-4 bg-[#2D7D6F] text-white font-black rounded-xl shadow-2xl hover:bg-[#246A5E] transition-all transform hover:-translate-y-1 active:scale-95 text-lg text-center">
                                 Get Started Now
                             </Link>
-                            <button className="w-full sm:w-auto px-10 py-4 bg-white text-[#2D7D6F] border-2 border-[#E9F5F3] font-bold rounded-xl hover:bg-[#F4F7F6] transition-all text-lg shadow-sm">
+                            <a href="#about" className="w-full sm:w-auto text-center px-10 py-4 bg-white text-[#2D7D6F] border-2 border-[#E9F5F3] font-bold rounded-xl hover:bg-[#F4F7F6] transition-all text-lg shadow-sm">
                                 Watch Demo
-                            </button>
+                            </a>
                         </div>
 
                         <div className="mt-12 flex items-center justify-center lg:justify-start gap-8 opacity-60 grayscale scale-90 md:scale-100">
@@ -80,38 +80,56 @@ const Landing = () => {
                         </div>
                     </div>
 
-                    {/* Hero Visual - Mocking the Dashboard Look */}
-                    <div className="flex-1 relative w-full max-w-2xl">
-                        <div className="relative bg-white p-4 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(45,125,111,0.2)] border border-[#E2E8F0]">
-                            {/* Mock Image of Dashboard View */}
-                            <div className="rounded-[2rem] overflow-hidden aspect-video border border-[#E2E8F0]">
-                                <img
-                                    src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1200"
-                                    alt="CareSync Dashboard UI"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                            {/* Floating Stat Card 1 */}
-                            <div className="absolute -top-6 -right-6 bg-white p-5 rounded-2xl shadow-xl border border-[#E2E8F0] animate-bounce w-40 md:w-48">
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Heart Rate</div>
-                                <div className="text-2xl font-black text-[#2D7D6F]">
-                                    {stats.heart_rate} <span className="text-xs font-bold text-gray-500">bpm</span>
-                                </div>
-                                <div className="mt-2 h-1 bg-[#2D7D6F]/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-[#2D7D6F]" style={{ width: `${(stats.heart_rate / 200) * 100}%` }} />
-                                </div>
-                            </div>
-                            {/* Floating Stat Card 2 */}
-                            <div className="absolute -bottom-8 -left-8 bg-[#2D7D6F] p-5 rounded-2xl shadow-xl border border-[#2D7D6F]/20 text-white w-40 md:w-56">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Live Analytics</span>
-                                </div>
-                                <div className="text-lg font-bold mb-1 leading-none">{stats.status}</div>
-                                <div className="text-[10px] text-white/50 italic">
-                                    {stats.loading ? 'Fetching...' : 'Connected to Go Backend'}
-                                </div>
-                            </div>
+                    {/* Hero Visual - Animated Ecosystem */}
+                    <div className="flex-1 relative w-full max-w-2xl flex justify-center items-center h-[400px]">
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            {/* Central Pulse */}
+                            <motion.div 
+                                className="absolute z-20 w-32 h-32 bg-white rounded-full shadow-xl border-4 border-[#2D7D6F] flex items-center justify-center"
+                                animate={{ scale: [1, 1.05, 1], boxShadow: ["0px 0px 0px 0px rgba(45,125,111,0)", "0px 0px 0px 20px rgba(45,125,111,0.1)", "0px 0px 0px 0px rgba(45,125,111,0)"] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                <Activity className="w-12 h-12 text-[#2D7D6F]" />
+                            </motion.div>
+
+                            {/* Orbiting Nodes & Connections */}
+                            {[0, 1, 2].map((i) => {
+                                const angle = (i * 360) / 3;
+                                const radius = 160; 
+                                
+                                const x = Math.cos((angle * Math.PI) / 180) * radius;
+                                const y = Math.sin((angle * Math.PI) / 180) * radius;
+
+                                const icons = [<User key="user" />, <Stethoscope key="doc" />, <Building2 key="clinic" />];
+                                const labels = ["Patient", "Doctor", "Clinic"];
+                                const colors = ["bg-[#E9F5F3] text-[#2D7D6F]", "bg-[#E9F5F3] text-[#2D7D6F]", "bg-[#E9F5F3] text-[#2D7D6F]"];
+
+                                return (
+                                    <React.Fragment key={i}>
+                                        <motion.div 
+                                            className="absolute rounded-full border border-[#2D7D6F]/20 border-dashed"
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                                            style={{ width: radius * 2, height: radius * 2 }}
+                                        />
+                                        <motion.div
+                                            className="absolute z-10"
+                                            initial={{ opacity: 0, x: 0, y: 0 }}
+                                            animate={{ opacity: 1, x, y }}
+                                            transition={{ duration: 1.5, delay: 0.2 + i * 0.2, type: "spring", bounce: 0.4 }}
+                                        >
+                                            <div className="relative flex flex-col items-center">
+                                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform transition-transform hover:scale-110 border border-[#2D7D6F]/20 ${colors[i]} bg-white`}>
+                                                    {React.cloneElement(icons[i], { className: "w-8 h-8", strokeWidth: 2.5 })}
+                                                </div>
+                                                <div className="absolute top-full mt-3 px-4 py-1.5 bg-white rounded-full shadow-md text-[10px] font-black text-[#1A202C] uppercase tracking-widest whitespace-nowrap border border-[#E2E8F0]">
+                                                    {labels[i]}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    </React.Fragment>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -125,7 +143,7 @@ const Landing = () => {
                             <h2 className="text-4xl md:text-5xl font-black text-[#1A202C] mb-4">Precision Management Tools</h2>
                             <p className="text-lg text-[#4A5568]">We've stripped away the complexity. Manage your medical records and workflows with the elegance of a modern operating system.</p>
                         </div>
-                        <button className="px-6 py-2 bg-[#F4F7F6] text-[#2D7D6F] font-bold rounded-lg border border-[#E9F5F3]">View All Modules</button>
+                        <a href="#features" className="px-6 py-2 bg-[#F4F7F6] text-[#2D7D6F] font-bold rounded-lg border border-[#E9F5F3] text-center transition-colors hover:bg-[#2D7D6F] hover:text-white inline-block">View All Modules</a>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -156,15 +174,53 @@ const Landing = () => {
                 </div>
             </section>
 
+            {/* Approach Grid Section */}
+            <section id="about" className="py-24 px-6 md:px-16 bg-[#F8FBFA] border-t border-[#E2E8F0] overflow-hidden">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <div className="inline-block px-4 py-1.5 bg-[#2D7D6F]/10 text-[#2D7D6F] text-xs font-black uppercase tracking-[0.2em] rounded-full mb-6 border border-[#2D7D6F]/20">Our Approach</div>
+                        <h2 className="text-4xl md:text-5xl font-black text-[#1A202C] mb-6">Built for Modern Healthcare</h2>
+                        <p className="text-lg text-[#4A5568] leading-relaxed">CareSync eliminates data silos. By integrating patient records, billing, and telehealth into a single platform, we reduce administrative overhead by up to 40% and let doctors focus on care.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-[#E2E8F0] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#E9F5F3] opacity-0 group-hover:opacity-100 rounded-bl-full -z-0 transition-opacity duration-500" />
+                            <div className="w-14 h-14 bg-[#F4F7F6] text-[#2D7D6F] rounded-2xl flex items-center justify-center mb-8 group-hover:bg-[#2D7D6F] group-hover:text-white transition-all duration-500 relative z-10 shadow-sm border border-[#E9F5F3]">
+                                <Activity size={28} strokeWidth={2.5} />
+                            </div>
+                            <h3 className="text-2xl font-black text-[#1A202C] mb-4 relative z-10">Unified Records</h3>
+                            <p className="text-[#4A5568] leading-relaxed text-sm relative z-10 font-medium">Secure, accessible, and comprehensive patient data synchronized across all departments with zero latency, ensuring 100% uptime.</p>
+                        </div>
+                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-[#E2E8F0] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#E9F5F3] opacity-0 group-hover:opacity-100 rounded-bl-full -z-0 transition-opacity duration-500" />
+                            <div className="w-14 h-14 bg-[#F4F7F6] text-[#2D7D6F] rounded-2xl flex items-center justify-center mb-8 group-hover:bg-[#2D7D6F] group-hover:text-white transition-all duration-500 relative z-10 shadow-sm border border-[#E9F5F3]">
+                                <Stethoscope size={28} strokeWidth={2.5} />
+                            </div>
+                            <h3 className="text-2xl font-black text-[#1A202C] mb-4 relative z-10">Telehealth Native</h3>
+                            <p className="text-[#4A5568] leading-relaxed text-sm relative z-10 font-medium">High-definition video consults integrated directly into the clinical workflow, seamlessly connecting doctors and patients from anywhere.</p>
+                        </div>
+                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-[#E2E8F0] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#E9F5F3] opacity-0 group-hover:opacity-100 rounded-bl-full -z-0 transition-opacity duration-500" />
+                            <div className="w-14 h-14 bg-[#F4F7F6] text-[#2D7D6F] rounded-2xl flex items-center justify-center mb-8 group-hover:bg-[#2D7D6F] group-hover:text-white transition-all duration-500 relative z-10 shadow-sm border border-[#E9F5F3]">
+                                <Building2 size={28} strokeWidth={2.5} />
+                            </div>
+                            <h3 className="text-2xl font-black text-[#1A202C] mb-4 relative z-10">Smart Operations</h3>
+                            <p className="text-[#4A5568] leading-relaxed text-sm relative z-10 font-medium">Automated billing, smart scheduling, and AI-driven insights that cut administrative load and optimize hospital workflows instantly.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Access Portals */}
-            <section className="py-24 px-6 md:px-16 overflow-hidden">
+            <section className="py-24 px-6 md:px-16 overflow-hidden bg-white">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-12">
                     {/* Patient Portal Card */}
                     <div className="flex-1 bg-white p-12 rounded-[3.5rem] shadow-xl border border-[#E2E8F0] relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#E9F5F3] rounded-bl-full -z-10 transition-transform group-hover:scale-150" />
                         <h3 className="text-3xl font-black text-[#1A202C] mb-4">Patient Portal</h3>
                         <p className="text-[#4A5568] mb-10 leading-relaxed">View your lab results, manage bills, and consult with doctors from your private dashboard.</p>
-                        <Link to="/signup" className="px-8 py-3 bg-[#2D7D6F] text-white font-black rounded-xl hover:shadow-lg transition-all text-center">
+                        <Link to="/login?role=patient" className="px-8 py-3 bg-[#2D7D6F] text-white font-black rounded-xl hover:shadow-lg transition-all text-center">
                             Access My Health
                         </Link>
                     </div>
@@ -174,51 +230,78 @@ const Landing = () => {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -z-10 transition-transform group-hover:scale-150" />
                         <h3 className="text-3xl font-black text-white mb-4">Provider Suite</h3>
                         <p className="text-white/80 mb-10 leading-relaxed">Full administrative control for medical staff, nurses, and hospital administrators.</p>
-                        <Link to="/login" className="px-8 py-3 bg-white text-[#2D7D6F] font-black rounded-xl hover:shadow-xl transition-all text-center">
+                        <Link to="/login?role=doctor" className="px-8 py-3 bg-white text-[#2D7D6F] font-black rounded-xl hover:shadow-xl transition-all text-center">
                             Launch Provider Suite
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="py-20 px-6 md:px-16 bg-[#1A202C] text-white">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
-                    <div className="max-w-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-8 h-8 bg-[#2D7D6F] rounded flex items-center justify-center font-bold">M</div>
-                            <span className="text-xl font-black tracking-tight">CareSync</span>
+            {/* Contact Hub Footer */}
+            <footer id="contact" className="py-24 px-6 md:px-16 bg-[#1A202C] text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 -skew-x-12 translate-x-1/2 pointer-events-none" />
+                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
+                    <div>
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-10 h-10 bg-[#2D7D6F] rounded-lg flex items-center justify-center font-black text-xl text-white shadow-xl">
+                                M
+                            </div>
+                            <span className="text-2xl font-black tracking-tight">CareSync</span>
                         </div>
-                        <p className="text-gray-400 text-sm leading-relaxed mb-8">
+                        <p className="text-gray-400 text-sm leading-relaxed mb-10 max-w-sm font-medium">
                             Empowering healthcare institutions with professional-grade digital infrastructure. Trusted by leading clinical groups worldwide.
                         </p>
-                        <div className="flex gap-4">
-                            <div className="w-8 h-8 bg-white/5 rounded-full" />
-                            <div className="w-8 h-8 bg-white/5 rounded-full" />
-                            <div className="w-8 h-8 bg-white/5 rounded-full" />
+                        
+                        <div className="flex flex-col sm:flex-row gap-4 mb-12">
+                            <a href="tel:1800CARESYNC" className="px-5 py-3 bg-white/10 hover:bg-white/20 transition-colors rounded-xl flex items-center gap-3 border border-white/5 cursor-pointer">
+                                <Phone size={18} className="text-[#2D7D6F]" />
+                                <span className="text-sm font-bold tracking-wide">1-800-CARESYNC</span>
+                            </a>
+                            <a href="mailto:support@caresync.com" className="px-5 py-3 bg-white/10 hover:bg-white/20 transition-colors rounded-xl flex items-center gap-3 border border-white/5 cursor-pointer">
+                                <Mail size={18} className="text-[#2D7D6F]" />
+                                <span className="text-sm font-bold tracking-wide">support@caresync.com</span>
+                            </a>
+                        </div>
+
+                        <div className="flex items-center gap-4 bg-white/5 p-5 rounded-2xl border border-white/10 w-fit">
+                            <div className="relative">
+                                <div className="w-4 h-4 rounded-full bg-emerald-500 animate-pulse absolute" />
+                                <div className="w-4 h-4 rounded-full bg-emerald-500" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Network Status</span>
+                                <span className="text-sm font-black text-white">
+                                    {new Date().getHours() >= 9 && new Date().getHours() < 17 ? 'Systems Active & Operational' : 'After-Hours Support Active'}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-16">
-                        <div>
-                            <h5 className="font-black text-xs uppercase tracking-widest text-[#2D7D6F] mb-6">Product</h5>
-                            <ul className="flex flex-col gap-4 text-sm text-gray-500 font-bold">
-                                <li><a href="#" className="hover:underline">Dashboard</a></li>
-                                <li><a href="#" className="hover:underline">Pharmacy</a></li>
-                                <li><a href="#" className="hover:underline">Laboratory</a></li>
-                            </ul>
+                    <div className="flex flex-col gap-8 lg:mt-4">
+                        <div className="bg-white/5 rounded-3xl p-2 border border-white/10 overflow-hidden shadow-2xl">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.25280041498!2d-74.14448744578168!3d40.69763123326177!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2s!4v1709214713214!5m2!1sen!2s" 
+                                width="100%" 
+                                height="220" 
+                                style={{ border: 0, filter: 'grayscale(100%) invert(90%) opacity(70%) hue-rotate(180deg)', borderRadius: '1.25rem' }} 
+                                allowFullScreen="" 
+                                loading="lazy" 
+                                referrerPolicy="no-referrer-when-downgrade"
+                            />
                         </div>
-                        <div>
-                            <h5 className="font-black text-xs uppercase tracking-widest text-[#2D7D6F] mb-6">Company</h5>
-                            <ul className="flex flex-col gap-4 text-sm text-gray-400 font-bold">
-                                <li><a href="#" className="hover:underline">About</a></li>
-                                <li><a href="#" className="hover:underline">Careers</a></li>
-                                <li><a href="#" className="hover:underline">Privacy</a></li>
-                            </ul>
+                        <div className="grid grid-cols-2 gap-6 px-2">
+                             <div>
+                                <h5 className="font-black text-[10px] uppercase tracking-[0.2em] text-[#2D7D6F] mb-3 flex items-center gap-2"><MapPin size={12}/> Location</h5>
+                                <p className="text-sm text-gray-400 font-bold">1 Clinical Way<br/>New York, NY 10001</p>
+                             </div>
+                             <div>
+                                <h5 className="font-black text-[10px] uppercase tracking-[0.2em] text-[#2D7D6F] mb-3 flex items-center gap-2"><Clock size={12}/> Hours</h5>
+                                <p className="text-sm text-gray-400 font-bold">Mon-Fri: 9AM - 5PM EST<br/>Emergency: 24/7 Support</p>
+                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 text-gray-600 text-[10px] font-black uppercase tracking-[0.3em] text-center">
+                <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] text-center relative z-10 w-full">
                     © 2026 CareSync Software Engineering Group. All Rights Reserved.
                 </div>
             </footer>

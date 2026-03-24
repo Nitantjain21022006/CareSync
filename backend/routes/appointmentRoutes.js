@@ -12,7 +12,8 @@ import {
     getPatientAppointmentHistory,
     updateAppointmentStatus,
     requestReschedule,
-    respondReschedule
+    respondReschedule,
+    deleteAppointment
 } from '../controllers/appointmentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -31,5 +32,6 @@ router.get('/staff/today', protect, authorize('hospital_staff'), getStaffTodayAp
 router.patch('/update-status/:id', protect, authorize('hospital_staff', 'admin', 'doctor'), updateAppointmentStatus);
 router.patch('/request-reschedule/:id', protect, authorize('patient'), requestReschedule);
 router.patch('/respond-reschedule/:id', protect, authorize('doctor'), respondReschedule);
+router.delete('/:id', protect, authorize('doctor', 'admin'), deleteAppointment);
 
 export default router;

@@ -443,3 +443,28 @@ export const respondReschedule = async (req, res) => {
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
+
+// @desc    Delete/Dispose appointment
+// @route   DELETE /api/appointments/:id
+// @access  Private (Doctor/Admin)
+export const deleteAppointment = async (req, res) => {
+    try {
+        const appointment = await Appointment.findById(req.params.id);
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, error: 'Appointment not found' });
+        }
+
+        // Make sure only the assigned doctor or an admin can delete
+        if (req.user.role === 'doctor' && appointment.doctor.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, error: 'Not authorized to delete this appointment' });
+        }
+
+        await appointment.deleteOne();
+
+        res.status(200).json({ success: true, data: {} });
+    } catch (err) {
+        console.error('Error deleting appointment:', err);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};

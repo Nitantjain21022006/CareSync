@@ -62,6 +62,17 @@ const DoctorAppointments = () => {
         }
     };
 
+    const handleDispose = async (id) => {
+        if (!window.confirm('Are you sure you want to dispose of this appointment record?')) return;
+        try {
+            await api.delete(`/appointments/${id}`);
+            fetchAppointments();
+        } catch (err) {
+            console.error('Failed to dispose appointment');
+        }
+    };
+
+
     const pendingAppts = appointments.filter(a => a.status === 'pending' || a.status === 'reschedule_requested');
     const confirmedAppts = appointments.filter(a => a.status === 'confirmed');
 
@@ -271,12 +282,23 @@ const DoctorAppointments = () => {
                                                     Consultation Session Closed
                                                 </div>
                                             )}
-                                            <button
-                                                onClick={() => window.location.href = `/dashboard/doctor/patients?patientId=${appt.patient?._id}`}
-                                                className="w-full px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group/btn"
-                                            >
-                                                Clinical Suite <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-all" />
-                                            </button>
+                                            <div className="flex gap-2 w-full">
+                                                {(appt.status === 'completed' || appt.status === 'cancelled') && (
+                                                    <button
+                                                        onClick={() => handleDispose(appt._id)}
+                                                        className="flex-shrink-0 px-4 py-2 border border-red-200 text-red-500 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-all flex items-center justify-center group/btn"
+                                                        title="Dispose Record"
+                                                    >
+                                                        <XCircle size={14} className="group-hover/btn:scale-110 transition-transform" />
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => window.location.href = `/dashboard/doctor/patients?patientId=${appt.patient?._id}`}
+                                                    className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group/btn"
+                                                >
+                                                    Clinical Suite <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-all" />
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

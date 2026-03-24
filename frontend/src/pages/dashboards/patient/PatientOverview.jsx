@@ -18,7 +18,7 @@ import { useAuth } from '../../../context/AuthContext';
 import api from '../../../config/api';
 
 const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-    <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:shadow-md transition-all group relative overflow-hidden shadow-sm">
+    <div className="bg-white border border-emerald-100 p-6 rounded-2xl hover:shadow-lg hover:border-[#2D7D6F] transition-all duration-300 group relative overflow-hidden shadow-sm">
         <div className="flex items-center justify-between mb-6 relative z-10">
             <div className={`p-3 rounded-lg ${color} bg-opacity-10 text-opacity-100 shadow-sm`}>
                 <Icon className="h-5 w-5" />
@@ -222,19 +222,19 @@ const PatientOverview = () => {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-3xl p-8 shadow-sm relative overflow-hidden"
+                    className="bg-white border border-emerald-100 rounded-3xl p-8 shadow-sm hover:shadow-lg hover:border-[#2D7D6F] transition-all duration-300 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/20 rounded-full blur-3xl -mr-16 -mt-16" />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-16 -mt-16" />
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
                         <div className="flex items-center gap-5">
-                            <div className="h-16 w-16 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-inner">
-                                <Activity className="h-8 w-8" />
+                            <div className="h-16 w-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner border border-emerald-100">
+                                <ClipboardList className="h-8 w-8" />
                             </div>
                             <div>
                                 <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Outstanding Payments</h3>
                                 <p className="text-sm text-slate-500 font-bold mt-1">
                                     You have {pendingBills.length} pending {pendingBills.length === 1 ? 'invoice' : 'invoices'} totaling
-                                    <span className="text-orange-600 ml-1 font-black underline decoration-orange-300 underline-offset-4">
+                                    <span className="text-emerald-700 ml-1 font-black underline decoration-emerald-300 underline-offset-4">
                                         ₹{pendingBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0).toFixed(2)}
                                     </span>
                                 </p>
@@ -242,7 +242,7 @@ const PatientOverview = () => {
                         </div>
                         <Link
                             to="/dashboard/patient/billing"
-                            className="w-full md:w-auto px-8 py-4 bg-orange-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 flex items-center justify-center gap-3 active:scale-95"
+                            className="w-full md:w-auto px-8 py-4 bg-[#164237] text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-[#2D7D6F] transition-all shadow-xl shadow-emerald-900/10 flex items-center justify-center gap-3 active:scale-95"
                         >
                             Settle Balance
                             <ArrowUpRight size={18} />
@@ -263,7 +263,7 @@ const PatientOverview = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {creationRequests.map(req => (
-                            <div key={req._id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all">
+                            <div key={req._id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-emerald-100 hover:border-[#2D7D6F] hover:shadow-md transition-all duration-300">
                                 <div className="flex items-center gap-4">
                                     <div className="h-12 w-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-600 font-black shadow-sm">
                                         {req.doctor?.fullName?.[0] || ' '}
@@ -297,7 +297,7 @@ const PatientOverview = () => {
                 {/* Upcoming Appointments */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Authorized Doctors Folders */}
-                    <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                    <div className="bg-white border border-emerald-100 rounded-2xl p-8 shadow-sm hover:shadow-lg hover:border-[#2D7D6F] transition-all duration-300">
                         <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900 tracking-tight">Resource Directory</h3>
@@ -316,9 +316,9 @@ const PatientOverview = () => {
                                 {doctors.map(doc => (
                                     <Link key={doc._id} to={`/dashboard/patient/doctors?doctorId=${doc._id}`} className="flex flex-col items-center gap-3 group animate-in fade-in zoom-in duration-300">
                                         <div className="w-full aspect-[4/3] relative">
-                                            <div className="absolute inset-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col items-center justify-center group-hover:border-[#2D7D6F] transition-colors">
-                                                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#2D7D6F] flex items-center justify-center mb-2 group-hover:bg-[#2D7D6F] group-hover:text-white transition-all">
-                                                    <Activity size={20} />
+                                            <div className="absolute inset-0 bg-white rounded-2xl border border-emerald-100 shadow-sm overflow-hidden flex flex-col items-center justify-center group-hover:border-[#2D7D6F] group-hover:shadow-md transition-all duration-300">
+                                                 <div className="w-14 h-14 rounded-full bg-emerald-50 border-2 border-emerald-100 flex items-center justify-center mb-2 overflow-hidden shadow-inner group-hover:border-[#2D7D6F] transition-all">
+                                                    <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${doc.fullName}&backgroundColor=10b981`} alt="doctor" className="w-full h-full object-cover" />
                                                  </div>
                                             </div>
                                         </div>
@@ -338,7 +338,7 @@ const PatientOverview = () => {
                     </div>
 
                     {/* Upcoming Appointments */}
-                    <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                    <div className="bg-white border border-emerald-100 rounded-2xl p-8 shadow-sm hover:shadow-lg hover:border-[#2D7D6F] transition-all duration-300">
                         <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900 tracking-tight">Upcoming Consultations</h3>

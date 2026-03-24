@@ -73,7 +73,7 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-40 overflow-hidden font-sans"
+                        className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-40 overflow-hidden font-sans"
                         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
                     >
                         <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">

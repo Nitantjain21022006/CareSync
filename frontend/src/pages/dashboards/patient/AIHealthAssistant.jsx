@@ -99,7 +99,11 @@ const AIHealthAssistant = () => {
             }
         } else {
             // During active conversation, keep latest message in view
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+                }
+            }, 50);
         }
     }, [messages, loading]);
 
